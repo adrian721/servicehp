@@ -15,7 +15,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- FontAwesome CDN -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-family-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
         .gradient-bg {
@@ -169,28 +169,6 @@
     </main>
 
     <!-- Footer -->
- <!-- App Bottom Bar Navigation -->
-    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 py-2 shadow-lg">
-    <div class="max-w-md mx-auto px-6 flex justify-around items-center text-center">
-        <a href="index.html" class="flex flex-col items-center text-gray-400 hover:text-blue-600 transition">
-            <i class="fa-solid fa-house text-lg"></i>
-            <span class="text-[10px] mt-1">Beranda</span>
-        </a>
-        <a href="order.html" class="flex flex-col items-center text-blue-600 font-bold transition">
-            <i class="fa-solid fa-plus-circle text-lg"></i>
-            <span class="text-[10px] mt-1">Order</span>
-        </a>
-        <a href="status.html" class="flex flex-col items-center text-gray-400 hover:text-blue-600 transition">
-            <i class="fa-solid fa-clock-rotate-left text-lg"></i>
-            <span class="text-[10px] mt-1">Status</span>
-        </a>
-        <a href="admin.html" class="flex flex-col items-center text-gray-400 hover:text-blue-600 transition">
-            <i class="fa-solid fa-user-gear text-lg"></i>
-            <span class="text-[10px] mt-1">Admin</span>
-        </a>
-    </div>
-</nav>
-
 
     <!-- Service Worker Registration & PWA Logic -->
     <script>
@@ -372,5 +350,26 @@ function dapatkanLokasi() {
             }
         });
     </script>
+        <!-- App Bottom Bar Navigation (Fixed Bottom) -->
+    <nav class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-gray-200 py-2 shadow-lg">
+        <div class="max-w-md mx-auto px-6 flex justify-around items-center text-center">
+            <a href="index.html" class="flex flex-col items-center text-gray-400 hover:text-blue-600 transition">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px] mt-1">Beranda</span>
+            </a>
+            <a href="order.html" class="flex flex-col items-center text-blue-600 font-bold transition">
+                <i class="fa-solid fa-plus-circle text-lg"></i>
+                <span class="text-[10px] mt-1">Order</span>
+            </a>
+            <a href="status.html" class="flex flex-col items-center text-gray-400 hover:text-blue-600 transition">
+                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                <span class="text-[10px] mt-1">Status</span>
+            </a>
+            <a href="admin.html" class="flex flex-col items-center text-gray-400 hover:text-blue-600 transition">
+                <i class="fa-solid fa-user-gear text-lg"></i>
+                <span class="text-[10px] mt-1">Admin</span>
+            </a>
+        </div>
+    </nav>
 </body>
 </html>
