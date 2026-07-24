@@ -33,57 +33,67 @@
         </div>
     </main>
 
-    <script>
-        function getDB() { return JSON.parse(localStorage.getItem('adinda_service_db')) || []; }
-        function saveDB(data) { localStorage.setItem('adinda_service_db', JSON.stringify(data)); renderTable(); }
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, orderBy, query } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        function updateStatus(nota, newStatus) {
-            const db = getDB();
-            const item = db.find(i => i.nota === nota);
-            if(item) { item.status = newStatus; saveDB(db); }
-        }
+const firebaseConfig = {
+  apiKey: "AIzaSyBBMOpC0fys4xMAmYjSutZzNiLvauYa9sI",
+  authDomain: "adinda-cell-pwa.firebaseapp.com",
+  projectId: "adinda-cell-pwa",
+  storageBucket: "adinda-cell-pwa.firebasestorage.app",
+  messagingSenderId: "466300360784",
+  appId: "1:466300360784:web:6d7919024a13d9d4045955"
+};
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-        function hapusData(nota) {
-            if(confirm('Hapus data ' + nota + '?')) {
-                saveDB(getDB().filter(i => i.nota !== nota));
-            }
-        }
+  // Mendengarkan data secara Real-Time dari Firestore
+  const q = query(collection(db, "services"), orderBy("createdAt", "desc"));
+  onSnapshot(q, (snapshot) => {
+      const tbody = document.getElementById('tableBody');
+      document.getElementById('totalData').innerText = snapshot.size + " Unit";
 
-        function kirimWA(wa, nama, nota, status) {
-            const pesan = `Halo kak ${nama},\n\nUpdate status service Nota *${nota}* di Adinda Cell: *${status.toUpperCase()}*.\n\nTerima kasih!`;
-            window.open(`https://api.whatsapp.com/send?phone=${wa}&text=${encodeURIComponent(pesan)}`, '_blank');
-        }
+      if (snapshot.empty) {
+          tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">Belum ada antrean service.</td></tr>`;
+          return;
+      }
 
-        function renderTable() {
-            const db = getDB();
-            const tbody = document.getElementById('tableBody');
-            document.getElementById('totalData').innerText = db.length + " Unit";
+      tbody.innerHTML = snapshot.docs.map(docSnap => {
+          const item = docSnap.data();
+          const docId = docSnap.id;
+          const tgl = item.createdAt ? new Date(item.createdAt.seconds * 1000).toLocaleDateString('id-ID') : '-';
 
-            if(db.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-gray-400">Belum ada data antrean service.</td></tr>`;
-                return;
-            }
+          return `
+              <tr class="hover:bg-gray-50 border-b">
+                  <td class="p-4 font-medium"><span class="font-bold text-blue-600">${item.nota}</span><div class="text-[10px] text-gray-400">${tgl}</div></td>
+                  <td class="p-4"><div class="font-bold text-gray-800">${item.nama}</div><div class="text-[11px] text-gray-500">${item.wa}</div></td>
+                  <td class="p-4"><div class="font-semibold text-gray-700">${item.merk} ${item.tipe}</div><div class="text-[11px] text-gray-500">${item.kerusakan}</div></td>
+                  <td class="p-4">
+                      <select onchange="window.ubahStatus('${docId}', this.value)" class="bg-gray-50 border text-xs rounded-lg p-1.5 font-semibold">
+                          <option value="Menunggu" ${item.status === 'Menunggu' ? 'selected' : ''}>Menunggu</option>
+                          <option value="Diproses" ${item.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
+                          <option value="Selesai" ${item.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
+                      </select>
+                  </td>
+                  <td class="p-4 text-center space-x-1">
+                      <button onclick="window.hapus('${docId}')" class="bg-red-500 text-white p-2 rounded-lg"><i class="fa-solid fa-trash"></i></button>
+                  </td>
+              </tr>
+          `;
+      }).join('');
+  });
 
-            tbody.innerHTML = db.map(item => `
-                <tr class="hover:bg-gray-50">
-                    <td class="p-4 font-medium"><span class="font-bold text-blue-600">${item.nota}</span><div class="text-[10px] text-gray-400">${item.tanggal}</div></td>
-                    <td class="p-4"><div class="font-bold text-gray-800">${item.nama}</div><div class="text-[11px] text-gray-500">${item.wa}</div></td>
-                    <td class="p-4"><div class="font-semibold text-gray-700">${item.merk} ${item.tipe}</div><div class="text-[11px] text-gray-500">${item.kerusakan}</div></td>
-                    <td class="p-4">
-                        <select onchange="updateStatus('${item.nota}', this.value)" class="bg-gray-50 border text-xs rounded-lg p-1.5 font-semibold">
-                            <option value="Menunggu" ${item.status === 'Menunggu' ? 'selected' : ''}>Menunggu</option>
-                            <option value="Diproses" ${item.status === 'Diproses' ? 'selected' : ''}>Diproses</option>
-                            <option value="Selesai" ${item.status === 'Selesai' ? 'selected' : ''}>Selesai</option>
-                        </select>
-                    </td>
-                    <td class="p-4 text-center space-x-1">
-                        <button onclick="kirimWA('${item.wa}', '${item.nama}', '${item.nota}', '${item.status}')" class="bg-green-500 text-white p-2 rounded-lg"><i class="fa-brands fa-whatsapp"></i></button>
-                        <button onclick="hapusData('${item.nota}')" class="bg-red-500 text-white p-2 rounded-lg"><i class="fa-solid fa-trash"></i></button>
-                    </td>
-                </tr>
-            `).join('');
-        }
-        renderTable();
-    </script>
+  // Ekspor fungsi ke objek window agar bisa dipanggil inline dari HTML
+  window.ubahStatus = async (id, statusBaru) => {
+      await updateDoc(doc(db, "services", id), { status: statusBaru });
+  };
+
+  window.hapus = async (id) => {
+      if (confirm("Hapus data dari server cloud?")) {
+          await deleteDoc(doc(db, "services", id));
+      }
+  };
+</script>
 </body>
 </html>
