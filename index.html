@@ -24,7 +24,7 @@
         * { -webkit-tap-highlight-color: transparent; }
     </style>
 </head>
-<body class="bg-gray-50 font-sans antialiased min-h-screen flex flex-col justify-between pb-20 selection:bg-blue-200">
+<body class="bg-gray-50 font-sans antialiased min-h-screen flex flex-col justify-between pb-28 selection:bg-blue-200">
 
     <!-- Header Navbar -->
     <header class="gradient-bg text-white shadow-md sticky top-0 z-40">
@@ -71,8 +71,8 @@
                     <p class="text-blue-100 text-xs mt-1.5 leading-relaxed">
                         Layanan antar-jemput unit service area Palopo. Teknisi berpengalaman, pengerjaan cepat, dan koordinat penjemputan akurat.
                     </p>
-                    <button onclick="switchTab('order')" class="mt-4 bg-white text-blue-600 hover:bg-blue-50 font-bold px-4 py-2 rounded-xl text-xs shadow transition-all active:scale-95 flex items-center gap-2">
-                        <i class="fa-solid fa-paper-plane"></i> Booking Service Sekarang
+                    <button onclick="switchTab('order')" class="mt-4 bg-white text-blue-600 hover:bg-blue-50 font-bold px-4 py-2.5 rounded-xl text-xs shadow transition-all active:scale-95 flex items-center gap-2">
+                        <i class="fa-solid fa-paper-plane text-emerald-500"></i> Booking Service Sekarang
                     </button>
                 </div>
             </div>
@@ -224,30 +224,32 @@
     </main>
 
     <!-- Footer Copyright -->
-    <footer class="bg-slate-900 text-slate-400 text-center py-3 text-[10px] mb-12">
+    <footer class="bg-slate-900 text-slate-400 text-center py-3 text-[10px] mb-16">
         <p>&copy; 2026 Adinda Cell Palopo. All Rights Reserved. | <a href="admin.html" class="hover:underline text-slate-500">Panel Admin</a></p>
     </footer>
 
-    <!-- NAVBAR NAVIGATION MENU BOTTOM (STICKY BOTTOM) -->
-    <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-lg">
-        <div class="max-w-xl mx-auto flex justify-around items-center py-2">
+    <!-- NAVBAR NAVIGATION MENU BOTTOM (VARIASI MODERN & MENONJOL) -->
+    <nav class="fixed bottom-3 left-4 right-4 max-w-lg mx-auto bg-slate-900/90 backdrop-blur-md rounded-2xl border border-slate-700/60 shadow-2xl shadow-blue-900/40 z-50 px-3 py-2">
+        <div class="flex justify-around items-center relative">
             
             <!-- Menu Home -->
-            <button onclick="switchTab('home')" id="navHome" class="flex flex-col items-center text-blue-600 transition-all">
-                <i class="fa-solid fa-house text-lg"></i>
-                <span class="text-[10px] font-semibold mt-0.5">Home</span>
+            <button onclick="switchTab('home')" id="navHome" class="flex flex-col items-center py-1 px-4 rounded-xl text-blue-400 font-bold bg-white/10 transition-all duration-300 active:scale-95">
+                <i class="fa-solid fa-house text-base"></i>
+                <span class="text-[10px] tracking-wide mt-0.5">Home</span>
             </button>
 
-            <!-- Menu Order -->
-            <button onclick="switchTab('order')" id="navOrder" class="flex flex-col items-center text-gray-400 hover:text-blue-600 transition-all">
-                <i class="fa-solid fa-cart-plus text-lg"></i>
-                <span class="text-[10px] font-semibold mt-0.5">Order</span>
+            <!-- Menu Order (Tombol Floating Menonjol di Tengah) -->
+            <button onclick="switchTab('order')" id="navOrder" class="relative -top-5 flex flex-col items-center group">
+                <div class="w-14 h-14 bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg shadow-blue-500/50 border-4 border-slate-900 group-active:scale-90 transition-all duration-300 animate-pulse">
+                    <i class="fa-solid fa-paper-plane text-xl"></i>
+                </div>
+                <span id="labelOrder" class="text-[10px] font-bold text-emerald-400 tracking-wider -mt-0.5">ORDER</span>
             </button>
 
             <!-- Menu Status -->
-            <button onclick="switchTab('status')" id="navStatus" class="flex flex-col items-center text-gray-400 hover:text-blue-600 transition-all">
-                <i class="fa-solid fa-magnifying-glass text-lg"></i>
-                <span class="text-[10px] font-semibold mt-0.5">Status</span>
+            <button onclick="switchTab('status')" id="navStatus" class="flex flex-col items-center py-1 px-4 rounded-xl text-slate-400 hover:text-white transition-all duration-300 active:scale-95">
+                <i class="fa-solid fa-magnifying-glass text-base"></i>
+                <span class="text-[10px] tracking-wide mt-0.5">Status</span>
             </button>
 
         </div>
@@ -255,7 +257,7 @@
 
     <!-- LOGIC JAVASCRIPT SYSTEM (SPA & FIREBASE) -->
     <script>
-        // 1. Fungsi Navigasi SPA Tab Menu (Home, Order, Status)
+        // 1. Fungsi Navigasi SPA Tab Menu dengan Efek Animasi Tombol
         function switchTab(tabName) {
             const pageHome = document.getElementById('pageHome');
             const pageOrder = document.getElementById('pageOrder');
@@ -264,27 +266,28 @@
             const navHome = document.getElementById('navHome');
             const navOrder = document.getElementById('navOrder');
             const navStatus = document.getElementById('navStatus');
+            const labelOrder = document.getElementById('labelOrder');
 
             // Sembunyikan Semua Halaman
             pageHome.classList.add('hidden');
             pageOrder.classList.add('hidden');
             pageStatus.classList.add('hidden');
 
-            // Reset Warna Navigasi
-            navHome.className = "flex flex-col items-center text-gray-400 transition-all";
-            navOrder.className = "flex flex-col items-center text-gray-400 transition-all";
-            navStatus.className = "flex flex-col items-center text-gray-400 transition-all";
+            // Reset Gaya Tombol Navigasi ke Pasif
+            navHome.className = "flex flex-col items-center py-1 px-4 rounded-xl text-slate-400 hover:text-white transition-all duration-300 active:scale-95";
+            navStatus.className = "flex flex-col items-center py-1 px-4 rounded-xl text-slate-400 hover:text-white transition-all duration-300 active:scale-95";
+            labelOrder.className = "text-[10px] font-bold text-slate-400 tracking-wider -mt-0.5";
 
-            // Tampilkan Halaman Pilihan & Aktifkan Warna Icon
+            // Tampilkan Halaman Pilihan & Terapkan Highlight Aktif
             if (tabName === 'home') {
                 pageHome.classList.remove('hidden');
-                navHome.className = "flex flex-col items-center text-blue-600 font-bold transition-all";
+                navHome.className = "flex flex-col items-center py-1 px-4 rounded-xl text-blue-400 font-bold bg-white/10 transition-all duration-300 active:scale-95";
             } else if (tabName === 'order') {
                 pageOrder.classList.remove('hidden');
-                navOrder.className = "flex flex-col items-center text-blue-600 font-bold transition-all";
+                labelOrder.className = "text-[10px] font-bold text-emerald-400 tracking-wider -mt-0.5";
             } else if (tabName === 'status') {
                 pageStatus.classList.remove('hidden');
-                navStatus.className = "flex flex-col items-center text-blue-600 font-bold transition-all";
+                navStatus.className = "flex flex-col items-center py-1 px-4 rounded-xl text-blue-400 font-bold bg-white/10 transition-all duration-300 active:scale-95";
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -420,7 +423,7 @@
                     `📦 Unit: ${merk} ${tipe}\n` +
                     `⚠️ Kerusakan: ${kerusakan}\n` +
                     `📍 Maps: ${geotag}\n\n` +
-                    `_Terima Kasih._`;
+                    `_Data tersimpan otomatis di Server Cloud._`;
 
                 e.target.reset();
                 document.getElementById('geotag').value = '';
