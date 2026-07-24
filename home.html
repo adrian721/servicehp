@@ -123,10 +123,10 @@
             <!-- SDK Firebase v10 (CDN Moduler) -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc, updateDoc, doc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   // PASTE CONFIG FIREBASE KAMU DI SINI
-  const firebaseConfig = {
+   const firebaseConfig = {
     apiKey: "AIzaSyBBMOpC0fys4xMAmYjSutZzNiLvauYa9sI",
     authDomain: "adinda-cell-pwa.firebaseapp.com",
     projectId: "adinda-cell-pwa",
@@ -134,6 +134,7 @@
     messagingSenderId: "466300360784",
     appId: "1:466300360784:web:6d7919024a13d9d4045955"
   };
+
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
 
@@ -143,7 +144,6 @@
       const btnSubmit = e.target.querySelector('button[type="submit"]');
       const textAwal = btnSubmit.innerHTML;
 
-      // 1. Ambil Nilai Form
       const nama = document.getElementById('nama').value.trim();
       const wa = document.getElementById('wa').value.trim();
       const merk = document.getElementById('merk').value.trim();
@@ -152,21 +152,16 @@
       const geotag = document.getElementById('geotag').value.trim();
 
       if (!geotag) {
-          alert("Mohon klik 'Lacak Lokasi' terlebih dahulu agar kurir tahu titik penjemputan!");
+          alert("Mohon klik 'Lacak Lokasi' terlebih dahulu!");
           return;
       }
 
-      // Ubah UI Tombol saat loading
       btnSubmit.disabled = true;
       btnSubmit.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>Menyimpan ke Database...</span>`;
 
-      // 2. Buat Kode Nota Unik
-      const notaUnik = 'AC-' + Math.floor(10000 + Math.random() * 90000);
-
       try {
-          // 3. PROSES SIMPAN KE FIREBASE (Ditunggu sampai benar-benar SELESAI)
+          // 1. SIMPAN DULU KE FIREBASE (Biarkan Firebase membuat ID Unik secara otomatis)
           const docRef = await addDoc(collection(db, "services"), {
-              nota: notaUnik,
               nama: nama,
               wa: wa,
               merk: merk,
@@ -177,137 +172,42 @@
               createdAt: serverTimestamp()
           });
 
-          console.log("Berhasil ter-record di Firebase dengan ID:", docRef.id);
+          // 2. AMBIL 6 KARAKTER TERAKHIR DARI ID FIREBASE TERSIMPAM SEBAGAI NOTA
+          // Contoh ID Firebase: "8xK39fLpM129" -> Nota: "AC-LP129"
+          const notaResmi = "AC-" + docRef.id.substring(docRef.id.length - 6).toUpperCase();
 
-          // 4. SUSUN PESAN WHATSAPP (Menggunakan notaUnik yang SAMA)
+          // 3. UPDATE NOTA RESMI TERSEBUT KEMBALI KE DOKUMEN FIREBASE
+          await updateDoc(doc(db, "services", docRef.id), {
+              nota: notaResmi
+          });
+
+          // 4. SUSUN PESAN WA MENGGUNAKAN NOTA RESMI YANG SUDAH TERCONFIRM DI FIREBASE
           const nomorAdmin = "6281343600028";
           const teksPesan = `*BOOKING SERVICE ADINDA CELL* 🔧\n\n` +
-              `*No. Nota:* ${notaUnik}\n` +
+              `*No. Nota:* ${notaResmi}\n` +
               `👤 Nama: ${nama}\n` +
               `📱 No. WA: ${wa}\n` +
               `📦 Unit: ${merk} ${tipe}\n` +
               `⚠️ Kerusakan: ${kerusakan}\n` +
               `📍 Maps: ${geotag}\n\n` +
-              `_Data sudah terdaftar di database server._`;
+              `_Data tersimpan otomatis di Server Cloud Firebase._`;
 
-          const urlWA = `https://api.whatsapp.com/send?phone=${nomorAdmin}&text=${encodeURIComponent(teksPesan)}`;
-
-          // Reset Form setelah sukses
+          // Reset Form
           e.target.reset();
           document.getElementById('geotag').value = '';
           document.getElementById('textBtnLokasi').innerText = 'Lacak Lokasi';
 
-          // 5. BUKA WHATSAPP SETELAH DATA 100% TERSIMPAN
-          window.location.href = urlWA;
+          // 5. REDIRECT KE WHATSAPP
+          window.location.href = `https://api.whatsapp.com/send?phone=${nomorAdmin}&text=${encodeURIComponent(teksPesan)}`;
 
       } catch (error) {
           console.error("Firebase Error:", error);
-          alert("Gagal menyimpan data ke server! Periksa koneksi internet Anda.\nDetail: " + error.message);
+          alert("Gagal menyimpan ke database! " + error.message);
       } finally {
           btnSubmit.disabled = false;
           btnSubmit.innerHTML = textAwal;
       }
   });
 </script>
-        </div>
-    </main>
-
-    <footer class="bg-slate-900 text-slate-400 text-center py-5 text-xs">
-        <p>&copy; 2026 Adinda Cell Palopo. All Rights Reserved. | <a href="admin.html" class="hover:underline text-slate-500">Panel Admin</a></p>
-    </footer>
-
-    <script>
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js');
-            });
-        }
-
-        let deferredPrompt;
-        const installContainer = document.getElementById('pwaInstallContainer');
-        const btnInstallPWA = document.getElementById('btnInstallPWA');
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            if (installContainer) installContainer.classList.remove('hidden');
-        });
-
-        if (btnInstallPWA) {
-            btnInstallPWA.addEventListener('click', async () => {
-                if (!deferredPrompt) return;
-                deferredPrompt.prompt();
-                await deferredPrompt.userChoice;
-                deferredPrompt = null;
-                installContainer.classList.add('hidden');
-            });
-        }
-
-        function dapatkanLokasi() {
-            const btn = document.getElementById('btnLokasi');
-            const txtBtn = document.getElementById('textBtnLokasi');
-            const inputGeotag = document.getElementById('geotag');
-            const statusLokasi = document.getElementById('lokasiStatus');
-
-            if (!navigator.geolocation) {
-                statusLokasi.innerHTML = "<span class='text-red-500'>Browser tidak mendukung fitur lokasi.</span>";
-                return;
-            }
-
-            txtBtn.innerText = "Mencari...";
-            btn.disabled = true;
-
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const mapsLink = "https://www.google.com/maps?q=" + position.coords.latitude + "," + position.coords.longitude;
-                    inputGeotag.value = mapsLink;
-                    txtBtn.innerText = "Lokasi Akurat!";
-                    statusLokasi.innerHTML = "<span class='text-green-600 font-semibold'>Lokasi berhasil didapatkan!</span>";
-                },
-                function(error) {
-                    txtBtn.innerText = "Coba Lagi";
-                    btn.disabled = false;
-                    statusLokasi.innerHTML = "<span class='text-red-500'>Gagal mengambil lokasi.</span>";
-                },
-                { enableHighAccuracy: true, timeout: 15000 }
-            );
-        }
-
-        document.getElementById('bookingForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const nama = document.getElementById('nama').value;
-            const wa = document.getElementById('wa').value;
-            const merk = document.getElementById('merk').value;
-            const tipe = document.getElementById('tipe').value;
-            const kerusakan = document.getElementById('kerusakan').value;
-            const geotag = document.getElementById('geotag').value;
-            const nomorAdmin = "6281343600028";
-
-            if (!geotag) {
-                alert("Mohon klik tombol 'Lacak Lokasi' terlebih dahulu!");
-                return;
-            }
-
-            const notaAuto = 'AC-' + Math.floor(1000 + Math.random() * 9000);
-            const listDb = JSON.parse(localStorage.getItem('adinda_service_db')) || [];
-            listDb.unshift({
-                nota: notaAuto,
-                tanggal: new Date().toLocaleDateString('id-ID'),
-                nama, wa, merk, tipe, kerusakan, status: 'Menunggu'
-            });
-            localStorage.setItem('adinda_service_db', JSON.stringify(listDb));
-
-            const teksPesan = `*BOOKING SERVICE ADINDA CELL* 🔧\n\n` +
-                `*No. Nota:* ${notaAuto}\n` +
-                `👤 Nama: ${nama}\n` +
-                `📱 No. WA: ${wa}\n` +
-                `📦 Unit: ${merk} ${tipe}\n` +
-                `⚠️ Kerusakan: ${kerusakan}\n` +
-                `📍 Maps: ${geotag}\n\n` +
-                `_Mohon segera diproses, terima kasih!_`;
-
-            window.open(`https://api.whatsapp.com/send?phone=${nomorAdmin}&text=${encodeURIComponent(teksPesan)}`, '_blank');
-        });
-    </script>
 </body>
 </html>
