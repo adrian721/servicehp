@@ -122,33 +122,17 @@
             </form>
             <!-- SDK Firebase v10 (CDN Moduler) -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
-
-  // masukkan konfigurasi dari Langkah 1
-  const firebaseConfig = {
-    apiKey: "AIzaSyBBMOpC0fys4xMAmYjSutZzNiLvauYa9sI",
-    authDomain: "adinda-cell-pwa.firebaseapp.com",
-    projectId: "adinda-cell-pwa",
-    storageBucket: "adinda-cell-pwa.firebasestorage.app",
-    messagingSenderId: "466300360784",
-    appId: "1:466300360784:web:6d7919024a13d9d4045955"
-  };
-
-  // Inisialisasi Firebase & Firestore
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  // Tangani Submit Form
-  document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+document.getElementById('bookingForm').addEventListener('submit', async function(e) {
     e.preventDefault();
 
     const btnSubmit = e.target.querySelector('button[type="submit"]');
     btnSubmit.disabled = true;
     btnSubmit.innerText = "Menyimpan Data...";
 
-    // 1. BUAT KODE NOTA SEKALI SAJA DI AWAL
-    const notaUnik = 'AC-' + Math.floor(10000 + Math.random() * 90000); // Contoh hasil: AC-58392
+    // Generasi Nota berdasarkan Timestamp (Misal: AC-240715)
+    // Dijamin 100% konsisten antara DB dan WhatsApp
+    const jamSekarang = new Date();
+    const notaUnik = 'AC-' + jamSekarang.getMinutes() + jamSekarang.getSeconds() + Math.floor(Math.random() * 90 + 10);
 
     const nama = document.getElementById('nama').value;
     const wa = document.getElementById('wa').value;
@@ -164,31 +148,40 @@
         return;
     }
 
-    try {
-        // 2. SIMPAN KODE NOTA TERSEBUT KE FIREBASE
-        await addDoc(collection(db, "services"), {
-            nota: notaUnik, // Menggunakan notaUnik
-            nama: nama,
-            wa: wa,
-            merk: merk,
-            tipe: tipe,
-            kerusakan: kerusakan,
-            geotag: geotag,
-            status: "Menunggu",
-            createdAt: serverTimestamp()
-        });
+    // Buat Objek Data Tunggal
+    const payloadData = {
+        nota: notaUnik,
+        nama: nama,
+        wa: wa,
+        merk: merk,
+        tipe: tipe,
+        kerusakan: kerusakan,
+        geotag: geotag,
+        status: "Menunggu",
+        createdAt: serverTimestamp()
+    };
 
-        // 3. GUNAKAN KODE NOTA YANG SAMA UNTUK PESAN WHATSAPP
+    try {
+        // 1. Simpan Payload ke Firebase
+        await addDoc(collection(db, "services"), payloadData);
+
+        // 2. Susun Pesan WA Menggunakan Payload Data yang SAMA
         const nomorAdmin = "6281343600028";
         const teksPesan = `*BOOKING SERVICE ADINDA CELL* 🔧\n\n` +
-            `*No. Nota:* ${notaUnik}\n` + // Menggunakan notaUnik
-            `👤 Nama: ${nama}\n` +
-            `📱 No. WA: ${wa}\n` +
-            `📦 Unit: ${merk} ${tipe}\n` +
-            `⚠️ Kerusakan: ${kerusakan}\n` +
-            `📍 Maps: ${geotag}\n\n` +
-            `_Data sudah tersimpan otomatis di Database Cloud._`;
+            `*No. Nota:* ${payloadData.nota}\n` +
+            `👤 Nama: ${payloadData.nama}\n` +
+            `📱 No. WA: ${payloadData.wa}\n` +
+            `📦 Unit: ${payloadData.merk} ${payloadData.tipe}\n` +
+            `⚠️ Kerusakan: ${payloadData.kerusakan}\n` +
+            `📍 Maps: ${payloadData.geotag}\n\n` +
+            `_Data sudah tersimpan di Server Firebase._`;
 
+        // Reset Form
+        e.target.reset();
+        document.getElementById('geotag').value = '';
+        document.getElementById('textBtnLokasi').innerText = 'Lacak Lokasi';
+
+        // Buka WhatsApp
         window.open(`https://api.whatsapp.com/send?phone=${nomorAdmin}&text=${encodeURIComponent(teksPesan)}`, '_blank');
     } catch (error) {
         alert("Gagal menyimpan ke server: " + error.message);
