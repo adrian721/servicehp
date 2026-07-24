@@ -201,36 +201,67 @@
                 installContainer.classList.add('hidden');
             });
         }
+function dapatkanLokasi() {
+    const btn = document.getElementById('btnLokasi');
+    const txtBtn = document.getElementById('textBtnLokasi');
+    const inputGeotag = document.getElementById('geotag');
+    const statusLokasi = document.getElementById('lokasiStatus');
 
-        function dapatkanLokasi() {
-            const btn = document.getElementById('btnLokasi');
-            const txtBtn = document.getElementById('textBtnLokasi');
-            const inputGeotag = document.getElementById('geotag');
-            const statusLokasi = document.getElementById('lokasiStatus');
+    // 1. Cek apakah browser mendukung fitur Geolocation
+    if (!navigator.geolocation) {
+        alert("Browser Anda tidak mendukung fitur lokasi (Geolocator). Gunakan Chrome/Safari versi terbaru.");
+        return;
+    }
 
-            if (!navigator.geolocation) {
-                statusLokasi.innerHTML = "<span class='text-red-500'>Browser tidak mendukung fitur lokasi.</span>";
-                return;
+    // 2. Ubah UI saat sedang mencari
+    txtBtn.innerText = "Mencari GPS...";
+    btn.disabled = true;
+    statusLokasi.innerHTML = "<span class='text-blue-600 font-semibold animate-pulse'>Sedang menghubungkan ke GPS HP Anda...</span>";
+
+    // 3. Konfigurasi pencarian koordinat
+    const options = {
+        enableHighAccuracy: true, // Paksa gunakan GPS presisi tinggi
+        timeout: 20000,           // Waktu tunggu ditingkatkan jadi 20 detik
+        maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            const mapsLink = "https://www.google.com/maps?q=" + lat + "," + lon;
+
+            inputGeotag.value = mapsLink;
+            txtBtn.innerText = "Lokasi Akurat!";
+            btn.disabled = false;
+            statusLokasi.innerHTML = "<span class='text-green-600 font-semibold'><i class='fa-solid fa-circle-check'></i> Titik lokasi berhasil didapatkan!</span>";
+        },
+        function(error) {
+            btn.disabled = false;
+            txtBtn.innerText = "Coba Lagi";
+            
+            let pesanDetail = "";
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    pesanDetail = "Izin lokasi ditolak! Buka pengaturan browser HP Anda lalu izinkan akses lokasi untuk web ini.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    pesanDetail = "Sinyal GPS tidak ditemukan. Pastikan GPS/Lokasi di HP Anda sudah AKTIF.";
+                    break;
+                case error.TIMEOUT:
+                    pesanDetail = "Pencarian lokasi terlalu lama. Coba berdiri di area yang terbuka lalu klik lagi.";
+                    break;
+                default:
+                    pesanDetail = "Gagal mengambil lokasi: " + error.message;
+                    break;
             }
 
-            txtBtn.innerText = "Mencari...";
-            btn.disabled = true;
-
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const mapsLink = "https://www.google.com/maps?q=" + position.coords.latitude + "," + position.coords.longitude;
-                    inputGeotag.value = mapsLink;
-                    txtBtn.innerText = "Lokasi Akurat!";
-                    statusLokasi.innerHTML = "<span class='text-green-600 font-semibold'>Lokasi berhasil didapatkan!</span>";
-                },
-                function(error) {
-                    txtBtn.innerText = "Coba Lagi";
-                    btn.disabled = false;
-                    statusLokasi.innerHTML = "<span class='text-red-500'>Gagal mengambil lokasi.</span>";
-                },
-                { enableHighAccuracy: true, timeout: 15000 }
-            );
-        }
+            statusLokasi.innerHTML = `<span class='text-red-500 font-semibold'><i class='fa-solid fa-triangle-exclamation'></i> ${pesanDetail}</span>`;
+            alert(pesanDetail);
+        },
+        options
+    );
+}
     </script>
 
     <!-- Firebase SDK v10 (Module) -->
