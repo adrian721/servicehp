@@ -1,4 +1,4 @@
-const CACHE_NAME = 'adindacell-v3';
+const CACHE_NAME = 'adindacell-v4';
 const ASSETS_TO_CACHE = ['./', './index.html', './status.html', './admin.html', './manifest.json'];
 
 self.addEventListener('install', (event) => {
