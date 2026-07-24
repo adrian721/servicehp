@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service HP - Layanan Perbaikan HP Professional</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 50%, #06b6d4 100%);
+        }
+        .btn-hover-effect {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .btn-hover-effect:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px -5px rgba(79, 70, 229, 0.3);
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col justify-between">
+
+    <!-- Header Navigation Bar -->
+    <header class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-100 shadow-sm">
+        <div class="max-w-md mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl gradient-bg flex items-center justify-center text-white font-bold text-xl shadow-md">
+                    <i class="fa-solid fa-wrench"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-slate-900 text-lg leading-tight">Service HP</h1>
+                    <p class="text-xs text-slate-500">Fast & Reliable Service</p>
+                </div>
+            </div>
+            <a href="admin.html" class="w-9 h-9 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center justify-center transition">
+                <i class="fa-solid fa-user-gear text-sm"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Mobile/App Container -->
+    <main class="max-w-md mx-auto px-4 py-6 w-full flex-grow space-y-6">
+
+        <!-- Banner Hero Section -->
+        <div class="gradient-bg rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+            <div class="absolute -right-6 -bottom-6 opacity-10 text-9xl">
+                <i class="fa-solid fa-mobile-screen-button"></i>
+            </div>
+            <span class="bg-white/20 text-white text-xs px-3 py-1 rounded-full font-semibold uppercase tracking-wider backdrop-blur-md">
+                Solusi Perbaikan Gadget
+            </span>
+            <h2 class="text-2xl font-extrabold mt-3 mb-1">Servis HP Mudah & Transparan</h2>
+            <p class="text-indigo-100 text-xs leading-relaxed mb-4">
+                Daftar perbaikan online, pantau status perbaikan secara real-time, dan estimasi biaya transparan.
+            </p>
+            <div class="flex items-center space-x-2 text-xs font-medium text-indigo-100">
+                <span class="flex items-center"><i class="fa-solid fa-check-circle mr-1 text-emerald-300"></i> Garansi Servis</span>
+                <span class="flex items-center"><i class="fa-solid fa-bolt mr-1 text-amber-300"></i> Pengerjaan Cepat</span>
+            </div>
+        </div>
+
+        <!-- Quick Status Tracker Box -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+            <h3 class="text-sm font-bold text-slate-700 mb-2 flex items-center">
+                <i class="fa-solid fa-magnifying-glass text-indigo-600 mr-2"></i> Lacak Perbaikan Cepat
+            </h3>
+            <form action="status.html" method="GET" class="flex gap-2">
+                <input type="text" name="id" placeholder="Masukkan ID Nota / No HP..." 
+                    class="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-50">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-4 py-2.5 rounded-xl font-semibold transition flex items-center whitespace-nowrap shadow-sm">
+                    Cek
+                </button>
+            </form>
+        </div>
+
+        <!-- Main Menu Grid Buttons -->
+        <div>
+            <h3 class="text-sm font-bold text-slate-800 mb-3 px-1">Menu Utama</h3>
+            <div class="grid grid-cols-2 gap-3.5">
+                
+                <!-- Card 1: Buat Pesanan -->
+                <a href="order.html" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 btn-hover-effect flex flex-col justify-between group">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl group-hover:bg-indigo-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-file-signature"></i>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="font-bold text-slate-800 text-sm">Buat Pesanan</h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Daftarkan kerusakan HP kamu secara online</p>
+                    </div>
+                    <div class="mt-3 flex items-center text-xs text-indigo-600 font-semibold">
+                        Daftar Sekarang <i class="fa-solid fa-arrow-right ml-1.5 text-[10px]"></i>
+                    </div>
+                </a>
+
+                <!-- Card 2: Cek Status -->
+                <a href="status.html" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 btn-hover-effect flex flex-col justify-between group">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl group-hover:bg-emerald-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-list-check"></i>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="font-bold text-slate-800 text-sm">Status Servis</h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Cek progress & riwayat perbaikan</p>
+                    </div>
+                    <div class="mt-3 flex items-center text-xs text-emerald-600 font-semibold">
+                        Pantau Status <i class="fa-solid fa-arrow-right ml-1.5 text-[10px]"></i>
+                    </div>
+                </a>
+
+                <!-- Card 3: Panel Admin -->
+                <a href="admin.html" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 btn-hover-effect flex flex-col justify-between group">
+                    <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl group-hover:bg-amber-600 group-hover:text-white transition">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="font-bold text-slate-800 text-sm">Panel Admin</h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Kelola data servis, sparepart & biaya</p>
+                    </div>
+                    <div class="mt-3 flex items-center text-xs text-amber-600 font-semibold">
+                        Masuk Admin <i class="fa-solid fa-arrow-right ml-1.5 text-[10px]"></i>
+                    </div>
+                </a>
+
+                <!-- Card 4: Konsultasi / WA -->
+                <a href="https://wa.me/?text=Halo%20Service%20HP,%20saya%20ingin%20konsultasi%20perbaikan" target="_blank" class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 btn-hover-effect flex flex-col justify-between group">
+                    <div class="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center text-xl group-hover:bg-teal-600 group-hover:text-white transition">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="font-bold text-slate-800 text-sm">Konsultasi</h4>
+                        <p class="text-[11px] text-slate-500 mt-0.5">Tanya admin & estimasi biaya via WA</p>
+                    </div>
+                    <div class="mt-3 flex items-center text-xs text-teal-600 font-semibold">
+                        Chat WhatsApp <i class="fa-solid fa-arrow-right ml-1.5 text-[10px]"></i>
+                    </div>
+                </a>
+
+            </div>
+        </div>
+
+        <!-- Features Overview / Highlight -->
+        <div class="bg-slate-900 rounded-2xl p-5 text-white shadow-md">
+            <h3 class="text-sm font-bold mb-3 flex items-center text-indigo-300">
+                <i class="fa-solid fa-star mr-2"></i> Keunggulan Layanan Kami
+            </h3>
+            <div class="space-y-3 text-xs text-slate-300">
+                <div class="flex items-start space-x-3">
+                    <div class="w-6 h-6 rounded-lg bg-indigo-800/60 text-indigo-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div>
+                        <strong class="text-white">Pengerjaan Transparan:</strong>
+                        <p class="text-slate-400">Setiap perubahan status servis dapat diperiksa secara real-time kapan saja.</p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="w-6 h-6 rounded-lg bg-indigo-800/60 text-indigo-300 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <i class="fa-solid fa-mobile-button"></i>
+                    </div>
+                    <div>
+                        <strong class="text-white">Aplikasi PWA Ready:</strong>
+                        <p class="text-slate-400">Dapat diinstall langsung di layar utama smartphone tanpa download dari store.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- App Bottom Bar Navigation -->
+    <footer class="bg-white border-t border-slate-100 py-3 sticky bottom-0 z-40">
+        <div class="max-w-md mx-auto px-6 flex justify-around items-center text-center">
+            <a href="index.html" class="flex flex-col items-center text-indigo-600 font-semibold">
+                <i class="fa-solid fa-house text-lg"></i>
+                <span class="text-[10px] mt-1">Beranda</span>
+            </a>
+            <a href="order.html" class="flex flex-col items-center text-slate-400 hover:text-indigo-600 transition">
+                <i class="fa-solid fa-plus-circle text-lg"></i>
+                <span class="text-[10px] mt-1">Order</span>
+            </a>
+            <a href="status.html" class="flex flex-col items-center text-slate-400 hover:text-indigo-600 transition">
+                <i class="fa-solid fa-clock-rotate-left text-lg"></i>
+                <span class="text-[10px] mt-1">Status</span>
+            </a>
+            <a href="admin.html" class="flex flex-col items-center text-slate-400 hover:text-indigo-600 transition">
+                <i class="fa-solid fa-user-gear text-lg"></i>
+                <span class="text-[10px] mt-1">Admin</span>
+            </a>
+        </div>
+    </footer>
+
+    <!-- Service Worker Registration for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('SW Registered!', reg))
+                    .catch(err => console.error('SW Registration Failed!', err));
+            });
+        }
+    </script>
+</body>
+</html>
