@@ -53,27 +53,51 @@
         </div>
     </main>
 
-    <script>
-        document.getElementById('searchForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const input = document.getElementById('searchInput').value.trim();
-            const listService = JSON.parse(localStorage.getItem('adinda_service_db')) || [];
-            const found = listService.find(item => item.wa === input || item.nota === input);
+    <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-            if (found) {
-                document.getElementById('emptyBox').classList.add('hidden');
-                document.getElementById('resultBox').classList.remove('hidden');
-                document.getElementById('resNota').innerText = "ID Nota: " + found.nota;
-                document.getElementById('resTanggal').innerText = found.tanggal;
-                document.getElementById('resNama').innerText = found.nama;
-                document.getElementById('resUnit').innerText = found.merk + " " + found.tipe;
-                document.getElementById('resKerusakan').innerText = found.kerusakan;
-                document.getElementById('resBadgeStatus').innerText = found.status;
-            } else {
-                document.getElementById('resultBox').classList.add('hidden');
-                document.getElementById('emptyBox').classList.remove('hidden');
-            }
-        });
-    </script>
+  const firebaseConfig = { /* PASTE CONFIG FIREBASE KAMU DI SINI */ };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  document.getElementById('searchForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const input = document.getElementById('searchInput').value.trim();
+      const resultBox = document.getElementById('resultBox');
+      const emptyBox = document.getElementById('emptyBox');
+
+      try {
+          // Cari data berdasarkan nomor WA atau No Nota di Cloud Server
+          const qWa = query(collection(db, "services"), where("wa", "==", input));
+          const qNota = query(collection(db, "services"), where("nota", "==", input));
+
+          let querySnapshot = await getDocs(qWa);
+          if (querySnapshot.empty) {
+              querySnapshot = await getDocs(qNota);
+          }
+
+          if (!querySnapshot.empty) {
+              const data = querySnapshot.docs[0].data();
+              emptyBox.classList.add('hidden');
+              resultBox.classList.remove('hidden');
+
+              document.getElementById('resNota').innerText = "ID Nota: " + data.nota;
+              document.getElementById('resTanggal').innerText = data.createdAt ? new Date(data.createdAt.seconds * 1000).toLocaleDateString('id-ID') : '-';
+              document.getElementById('resNama').innerText = data.nama;
+              document.getElementById('resUnit').innerText = data.merk + " " + data.tipe;
+              document.getElementById('resKerusakan').innerText = data.kerusakan;
+
+              const badge = document.getElementById('resBadgeStatus');
+              badge.innerText = data.status;
+          } else {
+              resultBox.classList.add('hidden');
+              emptyBox.classList.remove('hidden');
+          }
+      } catch (err) {
+          alert("Gagal mengambil data server: " + err.message);
+      }
+  });
+</script>
 </body>
 </html>
