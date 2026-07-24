@@ -122,61 +122,93 @@
             </form>
             <!-- SDK Firebase v10 (CDN Moduler) -->
 <script type="module">
-document.getElementById('bookingForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-    const btnSubmit = e.target.querySelector('button[type="submit"]');
-    btnSubmit.disabled = true;
-    btnSubmit.innerText = "Menyimpan Data...";
+  // PASTE CONFIG FIREBASE KAMU DI SINI
+  const firebaseConfig = {
+      apiKey: "GANTI_DENGAN_API_KEY_ANDA",
+      authDomain: "GANTI_DENGAN_AUTH_DOMAIN",
+      projectId: "GANTI_DENGAN_PROJECT_ID",
+      storageBucket: "GANTI_DENGAN_STORAGE_BUCKET",
+      messagingSenderId: "GANTI_SENDER_ID",
+      appId: "GANTI_APP_ID"
+  };
 
-    // 1. BUAT SATU OBJEK DATA UTAMA (PAYLOAD)
-    const payload = {
-        nota: 'AC-' + Math.floor(10000 + Math.random() * 90000), // Nota dibuat 1x di sini
-        nama: document.getElementById('nama').value,
-        wa: document.getElementById('wa').value,
-        merk: document.getElementById('merk').value,
-        tipe: document.getElementById('tipe').value,
-        kerusakan: document.getElementById('kerusakan').value,
-        geotag: document.getElementById('geotag').value,
-        status: "Menunggu",
-        createdAt: serverTimestamp()
-    };
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
 
-    if (!payload.geotag) {
-        alert("Mohon lacak lokasi penjemputan terlebih dahulu!");
-        btnSubmit.disabled = false;
-        btnSubmit.innerText = "Kirim ke WhatsApp Admin";
-        return;
-    }
+  document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
 
-    try {
-        // 2. SIMPAN OBJEK PAYLOAD KE FIREBASE
-        await addDoc(collection(db, "services"), payload);
+      const btnSubmit = e.target.querySelector('button[type="submit"]');
+      const textAwal = btnSubmit.innerHTML;
 
-        // 3. AMBIL NOTA LANGSUNG DARI PAYLOAD UNTUK WA
-        const nomorAdmin = "6281343600028";
-        const teksPesan = `*BOOKING SERVICE ADINDA CELL* 🔧\n\n` +
-            `*No. Nota:* ${payload.nota}\n` + // <--- DIJAMIN SAMA DENGAN FIREBASE
-            `👤 Nama: ${payload.nama}\n` +
-            `📱 No. WA: ${payload.wa}\n` +
-            `📦 Unit: ${payload.merk} ${payload.tipe}\n` +
-            `⚠️ Kerusakan: ${payload.kerusakan}\n` +
-            `📍 Maps: ${payload.geotag}\n\n` +
-            `_Data tersimpan otomatis di Server Cloud._`;
+      // 1. Ambil Nilai Form
+      const nama = document.getElementById('nama').value.trim();
+      const wa = document.getElementById('wa').value.trim();
+      const merk = document.getElementById('merk').value.trim();
+      const tipe = document.getElementById('tipe').value.trim();
+      const kerusakan = document.getElementById('kerusakan').value.trim();
+      const geotag = document.getElementById('geotag').value.trim();
 
-        // Buka WhatsApp
-        window.open(`https://api.whatsapp.com/send?phone=${nomorAdmin}&text=${encodeURIComponent(teksPesan)}`, '_blank');
-        
-        // Reset form
-        e.target.reset();
-        document.getElementById('geotag').value = '';
-    } catch (error) {
-        alert("Gagal menyimpan data: " + error.message);
-    } finally {
-        btnSubmit.disabled = false;
-        btnSubmit.innerText = "Kirim ke WhatsApp Admin";
-    }
-});
+      if (!geotag) {
+          alert("Mohon klik 'Lacak Lokasi' terlebih dahulu agar kurir tahu titik penjemputan!");
+          return;
+      }
+
+      // Ubah UI Tombol saat loading
+      btnSubmit.disabled = true;
+      btnSubmit.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> <span>Menyimpan ke Database...</span>`;
+
+      // 2. Buat Kode Nota Unik
+      const notaUnik = 'AC-' + Math.floor(10000 + Math.random() * 90000);
+
+      try {
+          // 3. PROSES SIMPAN KE FIREBASE (Ditunggu sampai benar-benar SELESAI)
+          const docRef = await addDoc(collection(db, "services"), {
+              nota: notaUnik,
+              nama: nama,
+              wa: wa,
+              merk: merk,
+              tipe: tipe,
+              kerusakan: kerusakan,
+              geotag: geotag,
+              status: "Menunggu",
+              createdAt: serverTimestamp()
+          });
+
+          console.log("Berhasil ter-record di Firebase dengan ID:", docRef.id);
+
+          // 4. SUSUN PESAN WHATSAPP (Menggunakan notaUnik yang SAMA)
+          const nomorAdmin = "6281343600028";
+          const teksPesan = `*BOOKING SERVICE ADINDA CELL* 🔧\n\n` +
+              `*No. Nota:* ${notaUnik}\n` +
+              `👤 Nama: ${nama}\n` +
+              `📱 No. WA: ${wa}\n` +
+              `📦 Unit: ${merk} ${tipe}\n` +
+              `⚠️ Kerusakan: ${kerusakan}\n` +
+              `📍 Maps: ${geotag}\n\n` +
+              `_Data sudah terdaftar di database server._`;
+
+          const urlWA = `https://api.whatsapp.com/send?phone=${nomorAdmin}&text=${encodeURIComponent(teksPesan)}`;
+
+          // Reset Form setelah sukses
+          e.target.reset();
+          document.getElementById('geotag').value = '';
+          document.getElementById('textBtnLokasi').innerText = 'Lacak Lokasi';
+
+          // 5. BUKA WHATSAPP SETELAH DATA 100% TERSIMPAN
+          window.location.href = urlWA;
+
+      } catch (error) {
+          console.error("Firebase Error:", error);
+          alert("Gagal menyimpan data ke server! Periksa koneksi internet Anda.\nDetail: " + error.message);
+      } finally {
+          btnSubmit.disabled = false;
+          btnSubmit.innerHTML = textAwal;
+      }
+  });
 </script>
         </div>
     </main>
