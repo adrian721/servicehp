@@ -87,12 +87,14 @@
           document.getElementById('totalPay').innerText = "Rp " + Number(data.totalPay).toLocaleString('id-ID');
           
           // Render QR Code
-          document.getElementById('qrcode').innerHTML = "";
-          new QRCode(document.getElementById("qrcode"), {
-            text: data.qrisString,
-            width: 160,
-            height: 160
-          });
+          // KODE BARU (Sudah Diperbaiki untuk String Panjang):
+document.getElementById('qrcode').innerHTML = "";
+new QRCode(document.getElementById("qrcode"), {
+  text: data.qrisString,
+  width: 180,
+  height: 180,
+  correctLevel: QRCode.CorrectLevel.L // Mengubah level koreksi ke Low agar bisa menampung string panjang
+});
 
           document.getElementById('paymentArea').classList.remove('hidden');
         } else {
