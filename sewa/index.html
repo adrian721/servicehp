@@ -47,94 +47,120 @@
       <button onclick="cekPembayaran()" id="btnCek" class="w-full bg-blue-600 hover:bg-blue-700 font-semibold py-2 rounded-lg text-sm transition">Cek Status Pembayaran</button>
       
       <!-- KOTAK AKUN / LISENSI -->
-      <div id="accountBox" class="hidden mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-left">
-        <p class="text-xs text-emerald-400 font-bold mb-1">Pembayaran Sukses! Detail Akun Anda:</p>
-        <p id="accountDetail" class="font-mono text-sm bg-slate-900 p-2 rounded text-emerald-300 select-all"></p>
-      </div>
-    </div>
-  </div>
+     <!-- KODE ELEMEN SELECT (KOSONGKAN ISI OPTION-NYA) -->
+<div>
+  <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Pilih Paket Durasi</label>
+  <select id="paket" class="w-full bg-slate-700 text-white rounded-lg p-3 border border-slate-600 focus:outline-none focus:border-amber-400">
+    <option value="">-- Memuat Paket Harga... --</option>
+  </select>
+</div>
 
-  <script>
-    // URL Google Apps Script yang sudah dibersihkan (tidak duplikat)
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwaDAdmYe9_rP7OLv1CdPSwxxc71QVw1T1HQmHvJHAYRNWglN7B1MsjMOeD3b0K9XjkdA/exec"; 
-    let currentOrderId = null;
+<script>
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbwaDAdmYe9_rP7OLv1CdPSwxxc71QVw1T1HQmHvJHAYRNWglN7B1MsjMOeD3b0K9XjkdA/exec"; 
+  let currentOrderId = null;
 
-    document.getElementById('rentalForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('btnSubmit');
-      btn.innerText = "Processing...";
-      btn.disabled = true;
+  // FUNGSI UNTUK MENGAMBIL DAFTAR HARGA DARI GOOGLE SHEETS
+  async function loadProducts() {
+    const selectEl = document.getElementById('paket');
+    try {
+      const res = await fetch(`${GAS_URL}?action=getProducts`);
+      const data = await res.json();
 
-      const whatsapp = document.getElementById('whatsapp').value;
-      const select = document.getElementById('paket');
-      const harga = select.value;
-      const paket = select.options[select.selectedIndex].text;
-
-      try {
-        // Mengirim request POST dengan header text/plain agar ramah CORS di Google Apps Script
-        const res = await fetch(GAS_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8'
-          },
-          body: JSON.stringify({ whatsapp, harga, paket })
-        });
+      if (data.status === "SUCCESS" && data.products.length > 0) {
+        selectEl.innerHTML = ""; // Bersihkan opsi loading
         
-        const data = await res.json();
-
-        if (data.status === "SUCCESS") {
-          currentOrderId = data.orderId;
-          document.getElementById('totalPay').innerText = "Rp " + Number(data.totalPay).toLocaleString('id-ID');
-          
-          // Render QR Code
-          // KODE BARU (Sudah Diperbaiki untuk String Panjang):
-document.getElementById('qrcode').innerHTML = "";
-new QRCode(document.getElementById("qrcode"), {
-  text: data.qrisString,
-  width: 180,
-  height: 180,
-  correctLevel: QRCode.CorrectLevel.L // Mengubah level koreksi ke Low agar bisa menampung string panjang
-});
-
-          document.getElementById('paymentArea').classList.remove('hidden');
-        } else {
-          alert("Gagal: " + (data.message || "Terjadi kesalahan pada server."));
-        }
-
-      } catch (err) {
-        console.error("Detail Error:", err);
-        alert("Gagal membuat pesanan. Cek koneksi atau pastikan Google Apps Script sudah ter-deploy sebagai 'Anyone'.");
-      } finally {
-        btn.innerText = "Sewa Sekarang";
-        btn.disabled = false;
+        data.products.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p.harga; // Nilai harga
+          opt.innerText = `${p.nama} - Rp ${Number(p.harga).toLocaleString('id-ID')}`;
+          selectEl.appendChild(opt);
+        });
+      } else {
+        selectEl.innerHTML = '<option value="">Gagal memuat produk</option>';
       }
-    });
+    } catch (err) {
+      console.error("Error load products:", err);
+      selectEl.innerHTML = '<option value="">Gagal terhubung ke database</option>';
+    }
+  }
 
-    async function cekPembayaran() {
-      if (!currentOrderId) return;
-      const btn = document.getElementById('btnCek');
-      btn.innerText = "Mengecek...";
-      btn.disabled = true;
+  // Jalankan pemanggilan produk saat halaman web selesai dimuat
+  window.addEventListener('DOMContentLoaded', loadProducts);
 
-      try {
-        const res = await fetch(`${GAS_URL}?orderId=${currentOrderId}`);
-        const data = await res.json();
+  // LOGIKA SUBMIT ORDER SAMA SEPERTI SEBELUMNYA
+  document.getElementById('rentalForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmit');
+    btn.innerText = "Processing...";
+    btn.disabled = true;
 
-        if (data.status === "SUCCESS") {
-          document.getElementById('accountBox').classList.remove('hidden');
-          document.getElementById('accountDetail').innerText = data.account;
-          btn.innerText = "Lunas!";
-        } else {
-          alert("Pembayaran belum terdeteksi. Pastikan nominal yang ditransfer sesuai sampai 3 digit terakhir.");
-          btn.innerText = "Cek Status Pembayaran";
-          btn.disabled = false;
-        }
-      } catch (err) {
-        alert("Gagal mengecek status.");
+    const whatsapp = document.getElementById('whatsapp').value;
+    const select = document.getElementById('paket');
+    const harga = select.value;
+    const paket = select.options[select.selectedIndex].text;
+
+    try {
+      const res = await fetch(GAS_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'text/plain;charset=utf-8'
+        },
+        body: JSON.stringify({ whatsapp, harga, paket })
+      });
+      
+      const data = await res.json();
+
+      if (data.status === "SUCCESS") {
+        currentOrderId = data.orderId;
+        document.getElementById('totalPay').innerText = "Rp " + Number(data.totalPay).toLocaleString('id-ID');
+        
+        document.getElementById('qrcode').innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), {
+          text: data.qrisString,
+          width: 180,
+          height: 180,
+          correctLevel: QRCode.CorrectLevel.L
+        });
+
+        document.getElementById('paymentArea').classList.remove('hidden');
+      } else {
+        alert("Gagal: " + (data.message || "Terjadi kesalahan pada server."));
+      }
+
+    } catch (err) {
+      console.error("Detail Error:", err);
+      alert("Gagal membuat pesanan.");
+    } finally {
+      btn.innerText = "Sewa Sekarang";
+      btn.disabled = false;
+    }
+  });
+
+  async function cekPembayaran() {
+    if (!currentOrderId) return;
+    const btn = document.getElementById('btnCek');
+    btn.innerText = "Mengecek...";
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(`${GAS_URL}?orderId=${currentOrderId}`);
+      const data = await res.json();
+
+      if (data.status === "SUCCESS") {
+        document.getElementById('accountBox').classList.remove('hidden');
+        document.getElementById('accountDetail').innerText = data.account;
+        btn.innerText = "Lunas!";
+      } else {
+        alert("Pembayaran belum terdeteksi. Pastikan nominal yang ditransfer sesuai sampai 3 digit terakhir.");
         btn.innerText = "Cek Status Pembayaran";
         btn.disabled = false;
       }
+    } catch (err) {
+      alert("Gagal mengecek status.");
+      btn.innerText = "Cek Status Pembayaran";
+      btn.disabled = false;
     }
-  </script>
+  }
+</script>
 </body>
 </html>
