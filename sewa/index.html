@@ -55,7 +55,8 @@
   </div>
 
   <script>
-    const GAS_URL = "https://script.google.com/macros/s/AKfycbwaDAdmYe9_rP7OLv1CdPSwxxc71QVw1T1HQmHvJHAYRNWglN7B1MsjMOeD3b0K9XjkdA/exechttps://script.google.com/macros/s/AKfycbwaDAdmYe9_rP7OLv1CdPSwxxc71QVw1T1HQmHvJHAYRNWglN7B1MsjMOeD3b0K9XjkdA/exec"; // Tempel URL Apps Script di sini
+    // URL Google Apps Script yang sudah dibersihkan (tidak duplikat)
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbwaDAdmYe9_rP7OLv1CdPSwxxc71QVw1T1HQmHvJHAYRNWglN7B1MsjMOeD3b0K9XjkdA/exec"; 
     let currentOrderId = null;
 
     document.getElementById('rentalForm').addEventListener('submit', async (e) => {
@@ -70,26 +71,37 @@
       const paket = select.options[select.selectedIndex].text;
 
       try {
+        // Mengirim request POST dengan header text/plain agar ramah CORS di Google Apps Script
         const res = await fetch(GAS_URL, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'text/plain;charset=utf-8'
+          },
           body: JSON.stringify({ whatsapp, harga, paket })
         });
+        
         const data = await res.json();
 
-        currentOrderId = data.orderId;
-        document.getElementById('totalPay').innerText = "Rp " + data.totalPay.toLocaleString('id-ID');
-        
-        // Render QR Code
-        document.getElementById('qrcode').innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), {
-          text: data.qrisString,
-          width: 160,
-          height: 160
-        });
+        if (data.status === "SUCCESS") {
+          currentOrderId = data.orderId;
+          document.getElementById('totalPay').innerText = "Rp " + Number(data.totalPay).toLocaleString('id-ID');
+          
+          // Render QR Code
+          document.getElementById('qrcode').innerHTML = "";
+          new QRCode(document.getElementById("qrcode"), {
+            text: data.qrisString,
+            width: 160,
+            height: 160
+          });
 
-        document.getElementById('paymentArea').classList.remove('hidden');
+          document.getElementById('paymentArea').classList.remove('hidden');
+        } else {
+          alert("Gagal: " + (data.message || "Terjadi kesalahan pada server."));
+        }
+
       } catch (err) {
-        alert("Gagal membuat pesanan. Coba lagi!");
+        console.error("Detail Error:", err);
+        alert("Gagal membuat pesanan. Cek koneksi atau pastikan Google Apps Script sudah ter-deploy sebagai 'Anyone'.");
       } finally {
         btn.innerText = "Sewa Sekarang";
         btn.disabled = false;
