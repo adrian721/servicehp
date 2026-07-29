@@ -126,35 +126,60 @@
 
     // Fungsi Cek Pembayaran
     async function cekPembayaran() {
-      if (!currentOrderId) return;
-      const btn = document.getElementById('btnCek');
-      btn.innerText = "Mengecek...";
-      btn.disabled = true;
+  if (!currentOrderId) {
+    alert("ID Pesanan tidak ditemukan. Silakan buat pesanan baru.");
+    return;
+  }
 
-      try {
-        const res = await fetch(`${GAS_URL}?orderId=${encodeURIComponent(currentOrderId)}&_=${Date.now()}`);
-        const textData = await res.text();
-        const data = JSON.parse(textData);
+  const btn = document.getElementById('btnCek');
+  btn.innerText = "Mengecek...";
+  btn.disabled = true;
 
-        if (data.status === "SUCCESS") {
-          document.getElementById('accountBox').classList.remove('hidden');
-          document.getElementById('accountDetail').innerText = data.account;
-          btn.innerText = "Lunas!";
-        } else if (data.status === "PENDING") {
-          alert("Pembayaran belum terdeteksi. Pastikan nominal yang ditransfer sesuai.");
-          btn.innerText = "Cek Status Pembayaran";
-          btn.disabled = false;
-        } else {
-          alert("Pesanan tidak ditemukan.");
-          btn.innerText = "Cek Status Pembayaran";
-          btn.disabled = false;
-        }
-      } catch (err) {
-        alert("Gagal terhubung ke server.");
-        btn.innerText = "Cek Status Pembayaran";
-        btn.disabled = false;
-      }
+  try {
+    // Menggunakan URLSearchParams agar parameter aman & menambahkan timestamp anti-cache
+    const url = `${GAS_URL}?orderId=${encodeURIComponent(currentOrderId)}&_=${Date.now()}`;
+    
+    // Request fetch sederhana tanpa header khusus agar tidak memicu CORS Preflight
+    const res = await fetch(url);
+    const rawText = await res.text();
+    
+    // Parse JSON secara aman
+    let data;
+    try {
+      data = JSON.parse(rawText);
+    } catch (parseErr) {
+      console.error("Gagal membaca format JSON dari server:", rawText);
+      alert("Respons server tidak valid. Cek konsol browser.");
+      btn.innerText = "Cek Status Pembayaran";
+      btn.disabled = false;
+      return;
     }
+
+    if (data.status === "SUCCESS") {
+      document.getElementById('accountBox').classList.remove('hidden');
+      document.getElementById('accountDetail').innerText = data.account;
+      btn.innerText = "Lunas!";
+    } else if (data.status === "PENDING") {
+      alert("Pembayaran belum terdeteksi. Pastikan nominal transfer sesuai sampai 3 digit terakhir.");
+      btn.innerText = "Cek Status Pembayaran";
+      btn.disabled = false;
+    } else if (data.status === "NOT_FOUND") {
+      alert("Data order ini tidak ditemukan di sistem Google Sheets.");
+      btn.innerText = "Cek Status Pembayaran";
+      btn.disabled = false;
+    } else {
+      alert("Status: " + data.status);
+      btn.innerText = "Cek Status Pembayaran";
+      btn.disabled = false;
+    }
+
+  } catch (err) {
+    console.error("Detail Error Fetch:", err);
+    alert("Gagal terhubung ke server. Cek koneksi atau coba beberapa saat lagi.");
+    btn.innerText = "Cek Status Pembayaran";
+    btn.disabled = false;
+  }
+}
   </script>
 </body>
 </html>
