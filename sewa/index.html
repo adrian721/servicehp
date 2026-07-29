@@ -138,7 +138,7 @@
 
 async function cekPembayaran() {
   if (!currentOrderId) {
-    alert("ID Pesanan tidak ditemukan. Silakan buat pesanan baru.");
+    alert("ID Pesanan tidak ditemukan.");
     return;
   }
 
@@ -147,18 +147,18 @@ async function cekPembayaran() {
   btn.disabled = true;
 
   try {
-    // Tambahkan parameter timestamp (_=) agar browser tidak menyimpan cache lama
-    const response = await fetch(`${GAS_URL}?orderId=${encodeURIComponent(currentOrderId)}&_=${Date.now()}`);
+    const res = await fetch(`${GAS_URL}?orderId=${encodeURIComponent(currentOrderId)}&_=${Date.now()}`);
+    const rawText = await res.text(); // Ambil mentah dulu
     
-    // Ambil data sebagai teks terlebih dahulu untuk keamanan
-    const responseText = await response.text();
     let data;
-    
     try {
-      data = JSON.parse(responseText);
-    } catch (parseErr) {
-      console.error("Gagal parse JSON:", responseText);
-      throw new Error("Format respons server tidak valid");
+      data = JSON.parse(rawText);
+    } catch (e) {
+      console.error("Gagal membaca respons:", rawText);
+      alert("Respons server tidak valid. Cek konsol browser.");
+      btn.innerText = "Cek Status Pembayaran";
+      btn.disabled = false;
+      return;
     }
 
     if (data.status === "SUCCESS") {
@@ -166,22 +166,18 @@ async function cekPembayaran() {
       document.getElementById('accountDetail').innerText = data.account;
       btn.innerText = "Lunas!";
     } else if (data.status === "PENDING") {
-      alert("Pembayaran belum terdeteksi. Pastikan kamu sudah transfer tepat sampai 3 digit terakhir.");
-      btn.innerText = "Cek Status Pembayaran";
-      btn.disabled = false;
-    } else if (data.status === "NOT_FOUND") {
-      alert("Data pesanan tidak ditemukan di sistem.");
+      alert("Pembayaran belum terdeteksi. Pastikan transfer sesuai nominal unik.");
       btn.innerText = "Cek Status Pembayaran";
       btn.disabled = false;
     } else {
-      alert("Gagal: " + (data.message || "Status tidak dikenal"));
+      alert("Status order: " + data.status);
       btn.innerText = "Cek Status Pembayaran";
       btn.disabled = false;
     }
 
   } catch (err) {
-    console.error("Detail Error Cek Status:", err);
-    alert("Gagal mengecek status. Silakan coba beberapa saat lagi.");
+    console.error("Error Cek Status:", err);
+    alert("Gagal terhubung ke server. Silakan coba lagi.");
     btn.innerText = "Cek Status Pembayaran";
     btn.disabled = false;
   }
