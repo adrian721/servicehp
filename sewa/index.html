@@ -99,23 +99,19 @@
         
         const data = await res.json();
 
-       if (data.status === "SUCCESS") {
-  currentOrderId = data.orderId;
-  document.getElementById('totalPay').innerText = "Rp " + Number(data.totalPay).toLocaleString('id-ID');
-  
-  // BUAT QRIS DINAMIK DENGAN NOMINAL OTOMATIS
-  const dynamicQrisString = makeDynamicQris(data.qrisString, data.totalPay);
-  
-  document.getElementById('qrcode').innerHTML = "";
-  new QRCode(document.getElementById("qrcode"), {
-    text: dynamicQrisString, // Menggunakan string dinamik yang sudah di-inject nominal
-    width: 180,
-    height: 180,
-    correctLevel: QRCode.CorrectLevel.L
-  });
+        if (data.status === "SUCCESS") {
+          currentOrderId = data.orderId;
+          document.getElementById('totalPay').innerText = "Rp " + Number(data.totalPay).toLocaleString('id-ID');
+          
+          document.getElementById('qrcode').innerHTML = "";
+          new QRCode(document.getElementById("qrcode"), {
+            text: data.qrisString,
+            width: 180,
+            height: 180,
+            correctLevel: QRCode.CorrectLevel.L
+          });
 
-  document.getElementById('paymentArea').classList.remove('hidden');
-}
+          document.getElementById('paymentArea').classList.remove('hidden');
         } else {
           alert("Gagal membuat pesanan.");
         }
@@ -128,41 +124,6 @@
       }
     });
 
-    // Fungsi untuk menyisipkan nominal otomatis ke dalam String QRIS Statis
-function makeDynamicQris(qrisStatis, nominal) {
-  // Potong checksum 4 karakter terakhir dari QRIS Statis (tag 6304)
-  let baseQris = qrisStatis.slice(0, -8); 
-  
-  // Format tag 54 (Transaction Amount) sesuai standar QRIS / EMVCo
-  let strAmount = nominal.toString();
-  let tag54 = "54" + (strAmount.length < 10 ? "0" + strAmount.length : strAmount.length) + strAmount;
-  
-  // Gabungkan QRIS dasar dengan Tag 54 dan Tag 58 (ID) + Tag 6304 (CRC)
-  let rawQris = baseQris + tag54 + "5802ID6304";
-  
-  // Hitung ulang Checksum CRC16
-  let crc = crc16(rawQris).toUpperCase();
-  while (crc.length < 4) crc = "0" + crc;
-  
-  return rawQris + crc;
-}
-
-// Helper Hitung CRC16 Standar QRIS (CCITT-FALSE)
-function crc16(str) {
-  let crc = 0xFFFF;
-  for (let c = 0; c < str.length; c++) {
-    crc ^= str.charCodeAt(c) << 8;
-    for (let i = 0; i < 8; i++) {
-      if ((crc & 0x8000) !== 0) {
-        crc = (crc << 1) ^ 0x1021;
-      } else {
-        crc = crc << 1;
-      }
-    }
-  }
-  return (crc & 0xFFFF).toString(16);
-}
-    
     // Fungsi Cek Pembayaran
     async function cekPembayaran() {
   if (!currentOrderId) {
