@@ -30,34 +30,80 @@
       <button type="submit" id="btnSubmit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 rounded-lg transition">Sewa Sekarang</button>
     </form>
 
-    <!-- MODAL PEMBAYARAN -->
+    <!-- AREA PEMBAYARAN (QRIS + INTRUKSI) -->
     <div id="paymentArea" class="hidden mt-6 pt-6 border-t border-slate-700 text-center">
-      <p class="text-sm text-slate-300 mb-2">Scan QRIS di bawah ini:</p>
-      
-      <div id="qrcode" class="flex justify-center p-3 bg-white rounded-xl w-max mx-auto my-3"></div>
+      <!-- Container QRIS yang akan dihilangkan saat Lunas -->
+      <div id="qrisContainer">
+        <p class="text-sm text-slate-300 mb-2">Scan QRIS di bawah ini:</p>
+        
+        <div id="qrcode" class="flex justify-center p-3 bg-white rounded-xl w-max mx-auto my-3"></div>
 
-      <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 my-3">
-        <p class="text-xs text-amber-300">Transfer Tepat Sebesar:</p>
-        <p id="totalPay" class="text-2xl font-bold text-amber-400 my-1">Rp 0</p>
-        <p class="text-[10px] text-amber-200">*Termasuk kode unik agar terverifikasi otomatis</p>
+        <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 my-3">
+          <p class="text-xs text-amber-300">Transfer Tepat Sebesar:</p>
+          <p id="totalPay" class="text-2xl font-bold text-amber-400 my-1">Rp 0</p>
+          <p class="text-[10px] text-amber-200">*Termasuk kode unik agar terverifikasi otomatis</p>
+        </div>
       </div>
 
-      <button onclick="cekPembayaran()" id="btnCek" class="w-full bg-blue-600 hover:bg-blue-700 font-semibold py-2 rounded-lg text-sm transition">Cek Status Pembayaran</button>
-      
-      <!-- KOTAK AKUN / LISENSI -->
-      <div id="accountBox" class="hidden mt-4 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-left">
-        <p class="text-xs text-emerald-400 font-bold mb-1">Pembayaran Sukses! Detail Akun Anda:</p>
-        <p id="accountDetail" class="font-mono text-sm bg-slate-900 p-2 rounded text-emerald-300 select-all"></p>
-      </div>
+      <button onclick="cekPembayaran()" id="btnCek" class="w-full bg-blue-600 hover:bg-blue-700 font-semibold py-3 rounded-lg text-sm transition">Cek Status Pembayaran</button>
     </div>
+
+    <!-- KOTAK AKUN / LISENSI (MENCOLOK DI TENGAH SAAT LUNAS) -->
+    <div id="accountBox" class="hidden mt-6 p-5 bg-gradient-to-b from-emerald-950/80 to-slate-900 border-2 border-emerald-500 rounded-2xl text-center shadow-lg shadow-emerald-900/30">
+      <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-500 text-slate-900 rounded-full mb-3 text-2xl font-bold">
+        ✓
+      </div>
+      <h3 class="text-lg font-bold text-emerald-400 mb-1">PEMBAYARAN SUKSES!</h3>
+      <p class="text-xs text-slate-300 mb-4">Detail akun rental UnlockTool Anda:</p>
+      
+      <!-- Tampilan Detail Akun Besar di Tengah -->
+      <div class="bg-slate-950 border border-emerald-500/40 rounded-xl p-4 my-2 text-center">
+        <p id="accountDetail" class="font-mono text-base text-emerald-300 font-semibold select-all break-all whitespace-pre-wrap"></p>
+      </div>
+
+      <!-- Tombol Salin Akun -->
+      <button onclick="copyAccount()" id="btnCopy" class="mt-3 w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 px-4 rounded-lg text-sm transition flex items-center justify-center gap-2">
+        <span>📋 Salin Detail Akun</span>
+      </button>
+    </div>
+
   </div>
 
   <script>
-    // MASUKKAN URL APPS SCRIPT HASIL DEPLOY DI SINI
     const GAS_URL = "https://script.google.com/macros/s/AKfycbwaDAdmYe9_rP7OLv1CdPSwxxc71QVw1T1HQmHvJHAYRNWglN7B1MsjMOeD3b0K9XjkdA/exec"; 
     let currentOrderId = null;
 
-    // Memuat paket otomatis saat web dibuka
+    // Helper Inject Tag 54 ke QRIS Statis agar nominal otomatis terisi saat scan
+    function makeDynamicQris(qrisStatis, nominal) {
+      try {
+        let baseQris = qrisStatis.slice(0, -8); 
+        let strAmount = nominal.toString();
+        let tag54 = "54" + (strAmount.length < 10 ? "0" + strAmount.length : strAmount.length) + strAmount;
+        let rawQris = baseQris + tag54 + "5802ID6304";
+        let crc = crc16(rawQris).toUpperCase();
+        while (crc.length < 4) crc = "0" + crc;
+        return rawQris + crc;
+      } catch (e) {
+        return qrisStatis; // Fallback jika gagal parse CRC
+      }
+    }
+
+    function crc16(str) {
+      let crc = 0xFFFF;
+      for (let c = 0; c < str.length; c++) {
+        crc ^= str.charCodeAt(c) << 8;
+        for (let i = 0; i < 8; i++) {
+          if ((crc & 0x8000) !== 0) {
+            crc = (crc << 1) ^ 0x1021;
+          } else {
+            crc = crc << 1;
+          }
+        }
+      }
+      return (crc & 0xFFFF).toString(16);
+    }
+
+    // Memuat daftar paket dari Google Sheets
     async function loadProducts() {
       const selectEl = document.getElementById('paket');
       try {
@@ -78,7 +124,7 @@
     }
     window.addEventListener('DOMContentLoaded', loadProducts);
 
-    // Submit Form Pesanan
+    // Submit Order
     document.getElementById('rentalForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnSubmit');
@@ -103,14 +149,20 @@
           currentOrderId = data.orderId;
           document.getElementById('totalPay').innerText = "Rp " + Number(data.totalPay).toLocaleString('id-ID');
           
+          // Generate QRIS Dinamik
+          const dynamicQris = makeDynamicQris(data.qrisString, data.totalPay);
           document.getElementById('qrcode').innerHTML = "";
           new QRCode(document.getElementById("qrcode"), {
-            text: data.qrisString,
+            text: dynamicQris,
             width: 180,
             height: 180,
             correctLevel: QRCode.CorrectLevel.L
           });
 
+          // Reset Tampilan
+          document.getElementById('qrisContainer').classList.remove('hidden');
+          document.getElementById('btnCek').classList.remove('hidden');
+          document.getElementById('accountBox').classList.add('hidden');
           document.getElementById('paymentArea').classList.remove('hidden');
         } else {
           alert("Gagal membuat pesanan.");
@@ -124,62 +176,56 @@
       }
     });
 
-    // Fungsi Cek Pembayaran
+    // Cek Pembayaran
     async function cekPembayaran() {
-  if (!currentOrderId) {
-    alert("ID Pesanan tidak ditemukan. Silakan buat pesanan baru.");
-    return;
-  }
+      if (!currentOrderId) return;
+      const btn = document.getElementById('btnCek');
+      btn.innerText = "Mengecek...";
+      btn.disabled = true;
 
-  const btn = document.getElementById('btnCek');
-  btn.innerText = "Mengecek...";
-  btn.disabled = true;
+      try {
+        const res = await fetch(`${GAS_URL}?orderId=${encodeURIComponent(currentOrderId)}&_=${Date.now()}`);
+        const textData = await res.text();
+        const data = JSON.parse(textData);
 
-  try {
-    // Menggunakan URLSearchParams agar parameter aman & menambahkan timestamp anti-cache
-    const url = `${GAS_URL}?orderId=${encodeURIComponent(currentOrderId)}&_=${Date.now()}`;
-    
-    // Request fetch sederhana tanpa header khusus agar tidak memicu CORS Preflight
-    const res = await fetch(url);
-    const rawText = await res.text();
-    
-    // Parse JSON secara aman
-    let data;
-    try {
-      data = JSON.parse(rawText);
-    } catch (parseErr) {
-      console.error("Gagal membaca format JSON dari server:", rawText);
-      alert("Respons server tidak valid. Cek konsol browser.");
-      btn.innerText = "Cek Status Pembayaran";
-      btn.disabled = false;
-      return;
+        if (data.status === "SUCCESS") {
+          // HILANGKAN QRIS & TOMBOL CEK
+          document.getElementById('qrisContainer').classList.add('hidden');
+          document.getElementById('btnCek').classList.add('hidden');
+
+          // TAMPILKAN DETAIL AKUN DI TENGAH LENGKAP DENGAN STYLING MENCOLOK
+          document.getElementById('accountDetail').innerText = data.account;
+          document.getElementById('accountBox').classList.remove('hidden');
+
+        } else if (data.status === "PENDING") {
+          alert("Pembayaran belum terdeteksi. Pastikan nominal transfer sesuai sampai 3 digit terakhir.");
+          btn.innerText = "Cek Status Pembayaran";
+          btn.disabled = false;
+        } else {
+          alert("Data pesanan tidak ditemukan.");
+          btn.innerText = "Cek Status Pembayaran";
+          btn.disabled = false;
+        }
+      } catch (err) {
+        alert("Gagal terhubung ke server.");
+        btn.innerText = "Cek Status Pembayaran";
+        btn.disabled = false;
+      }
     }
 
-    if (data.status === "SUCCESS") {
-      document.getElementById('accountBox').classList.remove('hidden');
-      document.getElementById('accountDetail').innerText = data.account;
-      btn.innerText = "Lunas!";
-    } else if (data.status === "PENDING") {
-      alert("Pembayaran belum terdeteksi. Pastikan nominal transfer sesuai sampai 3 digit terakhir.");
-      btn.innerText = "Cek Status Pembayaran";
-      btn.disabled = false;
-    } else if (data.status === "NOT_FOUND") {
-      alert("Data order ini tidak ditemukan di sistem Google Sheets.");
-      btn.innerText = "Cek Status Pembayaran";
-      btn.disabled = false;
-    } else {
-      alert("Status: " + data.status);
-      btn.innerText = "Cek Status Pembayaran";
-      btn.disabled = false;
+    // Fungsi Salin Teks Akun
+    function copyAccount() {
+      const text = document.getElementById('accountDetail').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById('btnCopy');
+        btn.innerText = "✓ Berhasil Disalin!";
+        btn.classList.replace('bg-emerald-500', 'bg-blue-500');
+        setTimeout(() => {
+          btn.innerText = "📋 Salin Detail Akun";
+          btn.classList.replace('bg-blue-500', 'bg-emerald-500');
+        }, 2000);
+      });
     }
-
-  } catch (err) {
-    console.error("Detail Error Fetch:", err);
-    alert("Gagal terhubung ke server. Cek koneksi atau coba beberapa saat lagi.");
-    btn.innerText = "Cek Status Pembayaran";
-    btn.disabled = false;
-  }
-}
   </script>
 </body>
 </html>
