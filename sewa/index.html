@@ -137,30 +137,40 @@
   });
 
   async function cekPembayaran() {
-    if (!currentOrderId) return;
-    const btn = document.getElementById('btnCek');
-    btn.innerText = "Mengecek...";
-    btn.disabled = true;
+  if (!currentOrderId) {
+    alert("Order ID tidak ditemukan. Silakan buat pesanan baru.");
+    return;
+  }
 
-    try {
-      const res = await fetch(`${GAS_URL}?orderId=${currentOrderId}`);
-      const data = await res.json();
+  const btn = document.getElementById('btnCek');
+  btn.innerText = "Mengecek...";
+  btn.disabled = true;
 
-      if (data.status === "SUCCESS") {
-        document.getElementById('accountBox').classList.remove('hidden');
-        document.getElementById('accountDetail').innerText = data.account;
-        btn.innerText = "Lunas!";
-      } else {
-        alert("Pembayaran belum terdeteksi. Pastikan nominal yang ditransfer sesuai sampai 3 digit terakhir.");
-        btn.innerText = "Cek Status Pembayaran";
-        btn.disabled = false;
-      }
-    } catch (err) {
-      alert("Gagal mengecek status.");
+  try {
+    // Menambahkan timestamp agar browser tidak mengambil data dari cache lama
+    const res = await fetch(`${GAS_URL}?orderId=${currentOrderId}&_=${Date.now()}`);
+    const data = await res.json();
+
+    if (data.status === "SUCCESS") {
+      document.getElementById('accountBox').classList.remove('hidden');
+      document.getElementById('accountDetail').innerText = data.account;
+      btn.innerText = "Lunas!";
+    } else if (data.status === "PENDING") {
+      alert("Pembayaran belum terdeteksi. Pastikan nominal yang ditransfer sesuai sampai 3 digit terakhir.");
+      btn.innerText = "Cek Status Pembayaran";
+      btn.disabled = false;
+    } else {
+      alert("Status order tidak ditemukan atau terjadi kesalahan.");
       btn.innerText = "Cek Status Pembayaran";
       btn.disabled = false;
     }
+  } catch (err) {
+    console.error("Error Cek Status:", err);
+    alert("Gagal mengecek status ke server. Coba beberapa saat lagi.");
+    btn.innerText = "Cek Status Pembayaran";
+    btn.disabled = false;
   }
+}
 </script>
 </body>
 </html>
