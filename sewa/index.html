@@ -10,91 +10,144 @@
 <body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-4">
 
   <div class="w-full max-w-md bg-slate-800 rounded-2xl p-6 shadow-2xl border border-slate-700">
-    <h1 class="text-2xl font-bold text-center text-amber-400 mb-2">Rental UnlockTool</h1>
-    <p class="text-xs text-center text-slate-400 mb-6">Proses Otomatis 24 Jam via QRIS</p>
+    <h1 class="text-2xl font-bold text-center text-amber-400 mb-1">Rental UnlockTool</h1>
+    <p class="text-xs text-center text-slate-400 mb-5">Proses Otomatis 24 Jam via QRIS</p>
 
-    <!-- FORM SEWA -->
-    <form id="rentalForm" class="space-y-4">
-      <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Nomor WhatsApp</label>
-        <input type="number" id="whatsapp" required placeholder="08123456789" class="w-full bg-slate-700 text-white rounded-lg p-3 border border-slate-600 focus:outline-none focus:border-amber-400">
-      </div>
+    <!-- NAVIGASI MENU -->
+    <div class="flex border-b border-slate-700 mb-6 text-xs font-semibold">
+      <button type="button" onclick="switchTab('sewa')" id="tabSewa" class="flex-1 py-2.5 text-center text-amber-400 border-b-2 border-amber-400 transition">
+        Sewa
+      </button>
+      <button type="button" onclick="switchTab('lupa')" id="tabLupa" class="flex-1 py-2.5 text-center text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition">
+        Lupa Akun
+      </button>
+      <button type="button" onclick="switchTab('admin')" id="tabAdmin" class="flex-1 py-2.5 text-center text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition">
+        Kontak Admin
+      </button>
+    </div>
 
-      <div>
-        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Pilih Paket Durasi</label>
-        <select id="paket" class="w-full bg-slate-700 text-white rounded-lg p-3 border border-slate-600 focus:outline-none focus:border-amber-400">
-          <option value="">-- Memuat Paket... --</option>
-        </select>
-      </div>
-
-      <button type="submit" id="btnSubmit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 rounded-lg transition">Sewa Sekarang</button>
-    </form>
-
-    <!-- AREA PEMBAYARAN -->
-    <div id="paymentArea" class="hidden mt-6 pt-6 border-t border-slate-700 text-center">
-      <div id="qrisContainer">
-        <!-- TIMER COUNTDOWN -->
-        <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 mb-4 flex items-center justify-between">
-          <span class="text-xs text-slate-400">Sisa Waktu Pembayaran:</span>
-          <span id="countdownTimer" class="font-mono text-lg font-bold text-amber-400 animate-pulse">05:00</span>
+    <!-- HALAMAN 1: FORM SEWA -->
+    <div id="pageSewa">
+      <form id="rentalForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Nomor WhatsApp</label>
+          <input type="tel" id="whatsapp" required placeholder="08123456789" maxlength="13" class="w-full bg-slate-700 text-white rounded-lg p-3 border border-slate-600 focus:outline-none focus:border-amber-400">
+          <span class="text-[10px] text-slate-400">Format: 08xx (10 - 13 digit angka)</span>
         </div>
 
-        <p class="text-xs text-slate-300 mb-1">Scan QRIS di bawah ini:</p>
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Pilih Paket Durasi</label>
+          <select id="paket" class="w-full bg-slate-700 text-white rounded-lg p-3 border border-slate-600 focus:outline-none focus:border-amber-400">
+            <option value="">-- Memuat Paket... --</option>
+          </select>
+        </div>
+
+        <button type="submit" id="btnSubmit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 rounded-lg transition">Sewa Sekarang</button>
+      </form>
+
+      <!-- AREA PEMBAYARAN -->
+      <div id="paymentArea" class="hidden mt-6 pt-6 border-t border-slate-700 text-center">
+        <div id="qrisContainer">
+          <div class="bg-slate-900 border border-slate-700 rounded-xl p-3 mb-4 flex items-center justify-between">
+            <span class="text-xs text-slate-400">Sisa Waktu Pembayaran:</span>
+            <span id="countdownTimer" class="font-mono text-lg font-bold text-amber-400 animate-pulse">05:00</span>
+          </div>
+
+          <p class="text-xs text-slate-300 mb-1">Scan QRIS di bawah ini:</p>
+          
+          <div id="qrcode" class="flex justify-center p-3 bg-white rounded-xl w-max mx-auto my-3 shadow-md"></div>
+
+          <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 my-3">
+            <p class="text-xs text-amber-300">Transfer Tepat Sebesar:</p>
+            <p id="totalPay" class="text-2xl font-bold text-amber-400 my-1">Rp 0</p>
+            <p class="text-[10px] text-amber-200">*Termasuk kode unik agar terverifikasi otomatis</p>
+          </div>
+
+          <div id="statusIndicator" class="flex items-center justify-center gap-2 text-xs text-blue-400 mt-3 bg-blue-500/10 py-2 px-3 rounded-lg border border-blue-500/20">
+            <svg class="animate-spin h-3.5 w-3.5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Mengecek pembayaran secara otomatis...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- KOTAK AKUN -->
+      <div id="accountBox" class="hidden mt-6 p-5 bg-gradient-to-b from-emerald-950/80 to-slate-900 border-2 border-emerald-500 rounded-2xl text-center shadow-lg shadow-emerald-900/30">
+        <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-500 text-slate-900 rounded-full mb-3 text-2xl font-bold">✓</div>
+        <h3 class="text-lg font-bold text-emerald-400 mb-1">PEMBAYARAN SUKSES!</h3>
+        <p class="text-xs text-slate-300 mb-4">Gunakan Username dan Password di bawah untuk login:</p>
         
-        <div id="qrcode" class="flex justify-center p-3 bg-white rounded-xl w-max mx-auto my-3 shadow-md"></div>
-
-        <div class="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 my-3">
-          <p class="text-xs text-amber-300">Transfer Tepat Sebesar:</p>
-          <p id="totalPay" class="text-2xl font-bold text-amber-400 my-1">Rp 0</p>
-          <p class="text-[10px] text-amber-200">*Termasuk kode unik agar terverifikasi otomatis</p>
+        <div class="bg-slate-950 border border-slate-700 rounded-xl p-3 mb-3 text-left">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Username / User ID</label>
+          <div class="flex items-center justify-between gap-2">
+            <span id="accUser" class="font-mono text-sm text-emerald-300 font-bold break-all"></span>
+            <button onclick="copyText('accUser', 'btnCopyUser')" id="btnCopyUser" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 text-xs px-3 py-1.5 rounded-lg font-semibold transition shrink-0">📋 Salin</button>
+          </div>
         </div>
 
-        <div id="statusIndicator" class="flex items-center justify-center gap-2 text-xs text-blue-400 mt-3 bg-blue-500/10 py-2 px-3 rounded-lg border border-blue-500/20">
-          <svg class="animate-spin h-3.5 w-3.5 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span>Mengecek pembayaran secara otomatis...</span>
+        <div class="bg-slate-950 border border-slate-700 rounded-xl p-3 text-left">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Password</label>
+          <div class="flex items-center justify-between gap-2">
+            <span id="accPass" class="font-mono text-sm text-emerald-300 font-bold break-all"></span>
+            <button onclick="copyText('accPass', 'btnCopyPass')" id="btnCopyPass" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 text-xs px-3 py-1.5 rounded-lg font-semibold transition shrink-0">📋 Salin</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- KOTAK PESAN EXPIRED -->
+      <div id="expiredBox" class="hidden mt-6 p-5 bg-rose-950/80 border border-rose-500/50 rounded-2xl text-center">
+        <p class="text-rose-400 font-bold mb-1">Waktu Pembayaran Habis</p>
+        <p class="text-xs text-slate-300 mb-3">Pesanan telah kadaluarsa. Silakan lakukan pemesanan ulang jika ingin menyewa.</p>
+        <button onclick="window.location.reload()" class="bg-slate-700 hover:bg-slate-600 text-xs px-4 py-2 rounded-lg transition">Pesan Ulang</button>
+      </div>
+    </div>
+
+    <!-- HALAMAN 2: LUPA AKUN -->
+    <div id="pageLupa" class="hidden space-y-4">
+      <form id="lupaForm" class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Masukkan Nomor WhatsApp</label>
+          <input type="tel" id="whatsappLupa" required placeholder="08123456789" maxlength="13" class="w-full bg-slate-700 text-white rounded-lg p-3 border border-slate-600 focus:outline-none focus:border-amber-400">
+          <span class="text-[10px] text-slate-400">Cek ID & Password aktif dari pesanan sebelumnya.</span>
+        </div>
+        <button type="submit" id="btnCekLupa" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 rounded-lg transition">Cek Akun Saya</button>
+      </form>
+
+      <div id="resultLupa" class="hidden mt-4 p-4 bg-slate-950 border border-slate-700 rounded-xl space-y-3">
+        <div class="text-left">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Username / User ID</label>
+          <div class="flex items-center justify-between gap-2">
+            <span id="lupaUser" class="font-mono text-sm text-amber-300 font-bold break-all">-</span>
+            <button onclick="copyText('lupaUser', 'btnCopyLupaUser')" id="btnCopyLupaUser" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 text-xs px-3 py-1.5 rounded-lg font-semibold transition shrink-0">📋 Salin</button>
+          </div>
+        </div>
+        <div class="text-left border-t border-slate-800 pt-3">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Password</label>
+          <div class="flex items-center justify-between gap-2">
+            <span id="lupaPass" class="font-mono text-sm text-amber-300 font-bold break-all">-</span>
+            <button onclick="copyText('lupaPass', 'btnCopyLupaPass')" id="btnCopyLupaPass" class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/40 text-xs px-3 py-1.5 rounded-lg font-semibold transition shrink-0">📋 Salin</button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- KOTAK AKUN DENGAN Masing-Masing TOMBOL COPY -->
-    <div id="accountBox" class="hidden mt-6 p-5 bg-gradient-to-b from-emerald-950/80 to-slate-900 border-2 border-emerald-500 rounded-2xl text-center shadow-lg shadow-emerald-900/30">
-      <div class="inline-flex items-center justify-center w-12 h-12 bg-emerald-500 text-slate-900 rounded-full mb-3 text-2xl font-bold">
-        ✓
+    <!-- HALAMAN 3: KONTAK ADMIN -->
+    <div id="pageAdmin" class="hidden text-center space-y-4 py-4">
+      <div class="w-16 h-16 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-full flex items-center justify-center mx-auto text-3xl">
+        💬
       </div>
-      <h3 class="text-lg font-bold text-emerald-400 mb-1">PEMBAYARAN SUKSES!</h3>
-      <p class="text-xs text-slate-300 mb-4">Gunakan Username dan Password di bawah untuk login:</p>
-      
-      <!-- ITEM 1: USERNAME -->
-      <div class="bg-slate-950 border border-slate-700 rounded-xl p-3 mb-3 text-left">
-        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Username / User ID</label>
-        <div class="flex items-center justify-between gap-2">
-          <span id="accUser" class="font-mono text-sm text-emerald-300 font-bold break-all"></span>
-          <button onclick="copyText('accUser', 'btnCopyUser')" id="btnCopyUser" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 text-xs px-3 py-1.5 rounded-lg font-semibold transition shrink-0">
-            📋 Salin
-          </button>
-        </div>
+      <div>
+        <h3 class="text-lg font-bold text-white">Butuh Bantuan?</h3>
+        <p class="text-xs text-slate-400 mt-1">Jika ada kendala saat transaksi atau penggunaan UnlockTool, silakan hubungi Customer Service kami.</p>
       </div>
-
-      <!-- ITEM 2: PASSWORD -->
-      <div class="bg-slate-950 border border-slate-700 rounded-xl p-3 text-left">
-        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Password</label>
-        <div class="flex items-center justify-between gap-2">
-          <span id="accPass" class="font-mono text-sm text-emerald-300 font-bold break-all"></span>
-          <button onclick="copyText('accPass', 'btnCopyPass')" id="btnCopyPass" class="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 text-xs px-3 py-1.5 rounded-lg font-semibold transition shrink-0">
-            📋 Salin
-          </button>
-        </div>
+      <div class="bg-slate-950 p-4 rounded-xl border border-slate-700 text-slate-300 font-mono text-sm">
+        0813-4360-0028
       </div>
-    </div>
-
-    <!-- KOTAK PESAN EXPIRED -->
-    <div id="expiredBox" class="hidden mt-6 p-5 bg-rose-950/80 border border-rose-500/50 rounded-2xl text-center">
-      <p class="text-rose-400 font-bold mb-1">Waktu Pembayaran Habis</p>
-      <p class="text-xs text-slate-300 mb-3">Pesanan telah kadaluarsa. Silakan lakukan pemesanan ulang jika ingin menyewa.</p>
-      <button onclick="window.location.reload()" class="bg-slate-700 hover:bg-slate-600 text-xs px-4 py-2 rounded-lg transition">Pesan Ulang</button>
+      <a href="https://wa.me/6281343600028?text=Halo%20Admin,%20saya%20butuh%20bantuan%20Rental%20UnlockTool" target="_blank" class="block w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition">
+        Hubungi via WhatsApp
+      </a>
     </div>
 
   </div>
@@ -105,7 +158,35 @@
     let checkInterval = null;
     let timerInterval = null;
 
-    // Helper Inject Tag 54 ke QRIS Statis
+    // VALIDASI NOMOR WHATSAPP (08... & 10-13 digit)
+    function validateWA(number) {
+      const waRegex = /^08\d{8,11}$/;
+      return waRegex.test(number);
+    }
+
+    // SWITCH TAB MENU
+    function switchTab(tab) {
+      document.getElementById('pageSewa').classList.add('hidden');
+      document.getElementById('pageLupa').classList.add('hidden');
+      document.getElementById('pageAdmin').classList.add('hidden');
+
+      document.getElementById('tabSewa').className = "flex-1 py-2.5 text-center text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition";
+      document.getElementById('tabLupa').className = "flex-1 py-2.5 text-center text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition";
+      document.getElementById('tabAdmin').className = "flex-1 py-2.5 text-center text-slate-400 border-b-2 border-transparent hover:text-slate-200 transition";
+
+      if (tab === 'sewa') {
+        document.getElementById('pageSewa').classList.remove('hidden');
+        document.getElementById('tabSewa').className = "flex-1 py-2.5 text-center text-amber-400 border-b-2 border-amber-400 transition";
+      } else if (tab === 'lupa') {
+        document.getElementById('pageLupa').classList.remove('hidden');
+        document.getElementById('tabLupa').className = "flex-1 py-2.5 text-center text-amber-400 border-b-2 border-amber-400 transition";
+      } else if (tab === 'admin') {
+        document.getElementById('pageAdmin').classList.remove('hidden');
+        document.getElementById('tabAdmin').className = "flex-1 py-2.5 text-center text-amber-400 border-b-2 border-amber-400 transition";
+      }
+    }
+
+    // Helper Dynamic QRIS
     function makeDynamicQris(qrisStatis, nominal) {
       try {
         let baseQris = qrisStatis.slice(0, -8); 
@@ -135,7 +216,7 @@
       return (crc & 0xFFFF).toString(16);
     }
 
-    // Memuat daftar paket dari Google Sheets
+    // Load Produk dari Sheets
     async function loadProducts() {
       const selectEl = document.getElementById('paket');
       try {
@@ -156,14 +237,20 @@
     }
     window.addEventListener('DOMContentLoaded', loadProducts);
 
-    // Submit Order
+    // SUBMIT ORDER SEWA
     document.getElementById('rentalForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const whatsapp = document.getElementById('whatsapp').value.trim();
+
+      if (!validateWA(whatsapp)) {
+        alert("Nomor WhatsApp tidak valid!\nPastikan diawali '08' dan terdiri dari 10 - 13 digit angka.");
+        return;
+      }
+
       const btn = document.getElementById('btnSubmit');
       btn.innerText = "Processing...";
       btn.disabled = true;
 
-      const whatsapp = document.getElementById('whatsapp').value;
       const select = document.getElementById('paket');
       const harga = select.value;
       const paket = select.options[select.selectedIndex].text;
@@ -210,7 +297,51 @@
       }
     });
 
-    // AUTO-CHECK DENGAN PEMISAHAN USER & PASS
+    // SUBMIT LUPA AKUN
+    document.getElementById('lupaForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const whatsapp = document.getElementById('whatsappLupa').value.trim();
+
+      if (!validateWA(whatsapp)) {
+        alert("Nomor WhatsApp tidak valid!\nPastikan diawali '08' dan terdiri dari 10 - 13 digit angka.");
+        return;
+      }
+
+      const btn = document.getElementById('btnCekLupa');
+      btn.innerText = "Mengecek...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`${GAS_URL}?action=getAccountByWa&whatsapp=${encodeURIComponent(whatsapp)}&_=${Date.now()}`);
+        const data = await res.json();
+
+        if (data.status === "SUCCESS" && data.account) {
+          let rawAccount = data.account;
+          let username = rawAccount;
+          let password = "-";
+
+          if (rawAccount.includes("|")) {
+            const parts = rawAccount.split("|");
+            username = parts[0] || "-";
+            password = parts[1] || "-";
+          }
+
+          document.getElementById('lupaUser').innerText = username;
+          document.getElementById('lupaPass').innerText = password;
+          document.getElementById('resultLupa').classList.remove('hidden');
+        } else {
+          alert("Tidak ditemukan transaksi aktif untuk nomor WhatsApp tersebut.");
+          document.getElementById('resultLupa').classList.add('hidden');
+        }
+      } catch (err) {
+        alert("Gagal terhubung ke server.");
+      } finally {
+        btn.innerText = "Cek Akun Saya";
+        btn.disabled = false;
+      }
+    });
+
+    // AUTO-CHECK PEMBAYARAN
     function startAutoCheck() {
       if (checkInterval) clearInterval(checkInterval);
       
@@ -226,10 +357,8 @@
             clearInterval(checkInterval);
             clearInterval(timerInterval);
 
-            // Sembunyikan QRIS
             document.getElementById('qrisContainer').classList.add('hidden');
             
-            // Pecah string "user|pass" berdasarkan karakter '|'
             const rawAccount = data.account || "";
             let username = rawAccount;
             let password = "-";
@@ -245,7 +374,7 @@
             document.getElementById('accountBox').classList.remove('hidden');
           }
         } catch (err) {
-          // Abaikan error jaringan sementara saat auto check
+          // Ignore temp errors
         }
       }, 5000);
     }
@@ -276,18 +405,18 @@
       }, 1000);
     }
 
-    // FUNGSI COPY TEKS INDIVIDUAL
+    // COPY TEKS
     function copyText(elementId, btnId) {
       const text = document.getElementById(elementId).innerText;
+      if (!text || text === "-") return;
+
       navigator.clipboard.writeText(text).then(() => {
         const btn = document.getElementById(btnId);
         const originalText = btn.innerText;
         btn.innerText = "✓ Tersalin";
-        btn.classList.replace('text-emerald-400', 'text-blue-400');
         
         setTimeout(() => {
           btn.innerText = originalText;
-          btn.classList.replace('text-blue-400', 'text-emerald-400');
         }, 1800);
       });
     }
