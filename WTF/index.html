@@ -9,6 +9,10 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Library SheetJS untuk Export ke Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Library jsPDF & autoTable untuk Export ke PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  
   <style>
     body { padding-bottom: 80px; } /* Ruang untuk floating navbar bottom */
   </style>
@@ -168,11 +172,18 @@
             </h2>
             <p class="text-xs text-slate-400">Filter berdasarkan NIK, sisa limit, angsuran, atau status approval</p>
           </div>
-          <!-- Tombol Export Excel -->
-          <button onclick="exportToExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 font-semibold transition self-start sm:self-auto">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            Export Excel
-          </button>
+          
+          <!-- Tombol Export Excel & PDF -->
+          <div class="flex gap-2 self-start sm:self-auto">
+            <button onclick="exportToExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 font-semibold transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              Excel
+            </button>
+            <button onclick="exportToPDF()" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 font-semibold transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+              PDF
+            </button>
+          </div>
         </div>
 
         <!-- Filter Controls -->
@@ -520,8 +531,69 @@
       });
     }
 
-    // Export Table Data to Excel (.xlsx)
     // Export Table Data (HANYA DATA YANG SUDAH DI-FILTER)
+	// Export Table Data ke PDF (HANYA DATA YANG SUDAH DI-FILTER)
+    function exportToPDF() {
+      if (!currentFilteredData || currentFilteredData.length === 0) {
+        alert("Tidak ada data hasil filter yang bisa di-export ke PDF!");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      // Gunakan orientasi Landscape (L) agar tabel muat dengan rapi
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+      // Judul Laporan PDF
+      doc.setFontSize(16);
+      doc.text("WTF APP - Laporan Hasil Filter Data Nasabah", 14, 15);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')} | Total Data: ${currentFilteredData.length}`, 14, 22);
+
+      // Baris Header Tabel
+      const tableHeaders = [
+        ["No", "NIK", "Nama Nasabah", "Finance", "Pinjaman", "Sisa Limit", "Angsuran", "Approval", "No. Telp"]
+      ];
+
+      // Baris Data
+      const tableRows = currentFilteredData.map((item, idx) => {
+        const limitKredit = Number(item.LimitKredit || 0);
+        const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
+        const sisaLimit = limitKredit - jumlahPinjaman;
+        const angsuranKe = calculateAngsuranKe(item.Timestamp);
+
+        return [
+          idx + 1,
+          item.NIK || '-',
+          item.Nama || '-',
+          item.Finance || '-',
+          `Rp ${jumlahPinjaman.toLocaleString('id-ID')}`,
+          `Rp ${sisaLimit.toLocaleString('id-ID')}`,
+          `${angsuranKe} Bln`,
+          item.Approval || '-',
+          item.NoTelp || '-'
+        ];
+      });
+
+      // Render Tabel menggunakan autoTable
+      doc.autoTable({
+        head: tableHeaders,
+        body: tableRows,
+        startY: 26,
+        theme: 'grid',
+        headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' }, // Blue header
+        styles: { fontSize: 8, cellPadding: 2.5 },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { fontStyle: 'bold' }
+        }
+      });
+
+      // Download File PDF
+      doc.save(`WTF_APP_Data_Nasabah_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+	
     function exportToExcel() {
       if (!currentFilteredData || currentFilteredData.length === 0) {
         alert("Tidak ada data hasil filter yang bisa di-export!");
