@@ -461,24 +461,30 @@
       }
     }
 
-    // Apply Filter & Render Table
+// Apply Local Filter & Render Table (PERBAIKAN SEARCH NIK & NAMA)
     function applyLocalFilter() {
       const tbody = document.getElementById('tableBody');
-      const searchVal = document.getElementById('searchNik').value.toLowerCase();
+      const searchVal = document.getElementById('searchNik').value.trim().toLowerCase();
       const filterAngsuran = document.getElementById('filterAngsuran').value;
       const filterApproval = document.getElementById('filterApproval').value;
       const filterLimit = document.getElementById('filterLimit').value;
 
       const filtered = masterNasabahData.filter(item => {
-        const nikStr = String(item.NIK || '').toLowerCase();
-        const namaStr = String(item.Nama || '').toLowerCase();
+        // Konversi NIK dan Nama secara eksplisit ke String agar aman dari error tipe data Number
+        const nikStr = String(item.NIK !== undefined && item.NIK !== null ? item.NIK : '').toLowerCase();
+        const namaStr = String(item.Nama !== undefined && item.Nama !== null ? item.Nama : '').toLowerCase();
+        
+        // Match Search NIK atau Nama
         const matchSearch = !searchVal || nikStr.includes(searchVal) || namaStr.includes(searchVal);
 
+        // Angsuran ke- Calculation
         const angsuranKeCalculated = calculateAngsuranKe(item.Timestamp);
         const matchAngsuran = filterAngsuran !== '3_plus' || angsuranKeCalculated > 3;
 
+        // Approval Match
         const matchApproval = !filterApproval || String(item.Approval).toUpperCase() === filterApproval.toUpperCase();
 
+        // Limit Match
         const limitKredit = Number(item.LimitKredit || 0);
         const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
         const sisaLimit = limitKredit - jumlahPinjaman;
