@@ -271,7 +271,7 @@
                 <th class="p-3">Tgl Jatuh Tempo</th>
                 <th class="p-3">Program</th>
                 <th class="p-3">Approval</th>
-                <th class="p-3">Foto Bukti</th> <!-- TABEL HEADER FOTO BUKTI -->
+                <th class="p-3">Foto Bukti</th>
                 <th class="p-3">Keterangan</th>
                 <th class="p-3">Input By</th>
               </tr>
@@ -279,7 +279,7 @@
             <tbody id="tableBody" class="divide-y divide-slate-800">
               <tr>
                 <td colspan="20" class="p-6 text-center text-slate-500">
-                  Klik tombol "Muat Data" di atas untuk memuat data nasabah.
+                  Klik tombol "MUAT ATAU REFRESH DATA DARI SERVER" di atas untuk memuat data nasabah.
                 </td>
               </tr>
             </tbody>
@@ -392,11 +392,7 @@
         targetNav.classList.remove('text-slate-400');
         targetNav.classList.add('text-blue-500', 'font-semibold');
       }
-
- 
-      if (tabName === 'cari' && masterNasabahData.length === 0) {
-        fetchNasabahData();
-  
+    }
 
     // Login Form Handler (Menggunakan text/plain untuk CORS Safe)
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -528,7 +524,6 @@
         document.getElementById('nasabahForm').reset();
         base64FotoBukti = "";
         document.getElementById('previewContainer').classList.add('hidden');
-        fetchNasabahData();
       } catch (err) {
         alert("Gagal menyimpan data nasabah!");
       } finally {
