@@ -123,7 +123,7 @@
 
           <div>
             <label class="text-slate-300 font-medium block mb-1">Unit yang Dikredit</label>
-            <input type="text" id="inputUnit" placeholder="Contoh: Honda Beat 2024" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+            <input type="text" id="inputUnit" placeholder="Contoh: Iphone 16 1TB" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
           </div>
 
           <div>
@@ -133,6 +133,12 @@
           <div>
             <label class="text-slate-300 font-medium block mb-1">Jumlah Pinjaman (Rp) <span class="text-red-400">*</span></label>
             <input type="number" id="inputPinjaman" required placeholder="7000000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+          </div>
+
+          <!-- INPUT ANGSOURAN PER BULAN (BARU) -->
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Angsuran Per Bulan (Rp)</label>
+            <input type="number" id="inputAngsuranBulan" placeholder="Contoh: 350000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
           </div>
 
           <div>
@@ -251,7 +257,7 @@
 
         <!-- Hasil Tabel Pencarian Lengkap -->
         <div class="overflow-x-auto rounded-xl border border-slate-700 mt-2">
-          <table id="nasabahTable" class="w-full text-left text-xs text-slate-300 min-w-[1600px]">
+          <table id="nasabahTable" class="w-full text-left text-xs text-slate-300 min-w-[1700px]">
             <thead class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 sticky top-0">
               <tr>
                 <th class="p-3">No</th>
@@ -266,6 +272,7 @@
                 <th class="p-3">Limit Kredit</th>
                 <th class="p-3">Pinjaman</th>
                 <th class="p-3">Sisa Limit</th>
+                <th class="p-3">Angsuran / Bln</th> <!-- HEADER KOLOM ANGSOURAN BULAN -->
                 <th class="p-3">Tenor</th>
                 <th class="p-3">Angsuran Ke-</th>
                 <th class="p-3">Tgl Jatuh Tempo</th>
@@ -278,7 +285,7 @@
             </thead>
             <tbody id="tableBody" class="divide-y divide-slate-800">
               <tr>
-                <td colspan="20" class="p-6 text-center text-slate-500">
+                <td colspan="21" class="p-6 text-center text-slate-500">
                   Klik tombol "MUAT ATAU REFRESH DATA DARI SERVER" di atas untuk memuat data nasabah.
                 </td>
               </tr>
@@ -394,7 +401,7 @@
       }
     }
 
-    // Login Form Handler (Menggunakan text/plain untuk CORS Safe)
+    // Login Form Handler
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnLogin');
@@ -501,6 +508,7 @@
         finance: document.getElementById('inputFinance').value,
         limitKredit: document.getElementById('inputLimit').value,
         jumlahPinjaman: document.getElementById('inputPinjaman').value,
+        angsuranBulan: document.getElementById('inputAngsuranBulan').value, // PAYLOAD ANGSURAN BULAN
         unit: document.getElementById('inputUnit').value,
         tenor: document.getElementById('inputTenor').value,
         tglJatuhTempo: document.getElementById('inputTglJatuhTempo').value,
@@ -546,7 +554,7 @@
     // Fetch Nasabah Data
     async function fetchNasabahData() {
       const tbody = document.getElementById('tableBody');
-      tbody.innerHTML = `<tr><td colspan="20" class="p-6 text-center text-slate-400">Sedang mengambil data dari Google Sheets...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="21" class="p-6 text-center text-slate-400">Sedang mengambil data dari Google Sheets...</td></tr>`;
 
       try {
         const res = await fetch(`${GAS_API_URL}?action=getNasabah`);
@@ -556,10 +564,10 @@
           masterNasabahData = result.data;
           applyLocalFilter();
         } else {
-          tbody.innerHTML = `<tr><td colspan="20" class="p-6 text-center text-red-400">Gagal memuat data dari server.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="21" class="p-6 text-center text-red-400">Gagal memuat data dari server.</td></tr>`;
         }
       } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="20" class="p-6 text-center text-red-400">Terjadi kesalahan koneksi saat memuat data.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="21" class="p-6 text-center text-red-400">Terjadi kesalahan koneksi saat memuat data.</td></tr>`;
       }
     }
 
@@ -591,7 +599,7 @@
 
       tbody.innerHTML = '';
       if (currentFilteredData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="20" class="p-6 text-center text-slate-500">Tidak ada data nasabah yang sesuai.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="21" class="p-6 text-center text-slate-500">Tidak ada data nasabah yang sesuai.</td></tr>`;
         return;
       }
 
@@ -599,6 +607,7 @@
         const limitKredit = Number(item.LimitKredit || 0);
         const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
         const sisaLimit = limitKredit - jumlahPinjaman;
+        const angsuranBulan = Number(item.AngsuranBulan || item.AngsuranPerBulan || 0);
         const angsuranKe = calculateAngsuranKe(item.Timestamp);
         const isApproved = String(item.Approval).toUpperCase() === 'YA';
 
@@ -628,6 +637,7 @@
             <td class="p-3">Rp ${limitKredit.toLocaleString('id-ID')}</td>
             <td class="p-3">Rp ${jumlahPinjaman.toLocaleString('id-ID')}</td>
             <td class="p-3 font-semibold ${sisaLimit > 1000000 ? 'text-emerald-400' : 'text-slate-300'}">Rp ${sisaLimit.toLocaleString('id-ID')}</td>
+            <td class="p-3 font-semibold text-amber-400">${angsuranBulan > 0 ? 'Rp ' + angsuranBulan.toLocaleString('id-ID') : '-'}</td>
             <td class="p-3">${item.Tenor ? item.Tenor + ' Bln' : '-'}</td>
             <td class="p-3 font-bold text-blue-400">${angsuranKe} Bln</td>
             <td class="p-3">${tglJT}</td>
@@ -663,13 +673,14 @@
       doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')} | Total Data: ${currentFilteredData.length}`, 14, 22);
 
       const tableHeaders = [
-        ["No", "NIK", "Nama Nasabah", "Finance", "Pinjaman", "Sisa Limit", "Angsuran", "Approval", "No. Telp"]
+        ["No", "NIK", "Nama Nasabah", "Finance", "Pinjaman", "Sisa Limit", "Angsuran/Bln", "Angsuran Ke", "Approval", "No. Telp"]
       ];
 
       const tableRows = currentFilteredData.map((item, idx) => {
         const limitKredit = Number(item.LimitKredit || 0);
         const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
         const sisaLimit = limitKredit - jumlahPinjaman;
+        const angsuranBulan = Number(item.AngsuranBulan || item.AngsuranPerBulan || 0);
         const angsuranKe = calculateAngsuranKe(item.Timestamp);
 
         return [
@@ -679,6 +690,7 @@
           item.Finance || '-',
           `Rp ${jumlahPinjaman.toLocaleString('id-ID')}`,
           `Rp ${sisaLimit.toLocaleString('id-ID')}`,
+          angsuranBulan > 0 ? `Rp ${angsuranBulan.toLocaleString('id-ID')}` : '-',
           `${angsuranKe} Bln`,
           item.Approval || '-',
           item.NoTelp || '-'
@@ -712,6 +724,7 @@
         const limitKredit = Number(item.LimitKredit || 0);
         const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
         const sisaLimit = limitKredit - jumlahPinjaman;
+        const angsuranBulan = Number(item.AngsuranBulan || item.AngsuranPerBulan || 0);
         const angsuranKe = calculateAngsuranKe(item.Timestamp);
 
         return {
@@ -729,6 +742,7 @@
           "Limit Kredit": limitKredit,
           "Jumlah Pinjaman": jumlahPinjaman,
           "Limit Belum Terpakai": sisaLimit,
+          "Angsuran Per Bulan": angsuranBulan,
           "Unit Kredit": item.Unit || '',
           "Tenor (Bulan)": item.Tenor || '',
           "Angsuran Ke-": angsuranKe,
