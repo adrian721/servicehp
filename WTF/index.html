@@ -160,8 +160,8 @@
             <label class="text-slate-300 font-medium block mb-1">Keterangan Catatan</label>
             <input type="text" id="inputKeterangan" placeholder="Catatan tambahan..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
           </div>
-		  
-		  <!-- Fitur Upload / Jepret Foto Bukti Penerimaan -->
+
+          <!-- Fitur Upload / Jepret Foto Bukti Penerimaan -->
           <div class="md:col-span-2">
             <label class="text-slate-300 font-medium block mb-1">
               Foto Bukti Penerimaan (Kamera / File)
@@ -186,7 +186,7 @@
       </div>
     </section>
 
-    <!-- TAB 3: MENU CARI & FILTER DATA + EXPORT EXCEL -->
+    <!-- TAB 3: MENU CARI & FILTER DATA + EXPORT -->
     <section id="tab-cari" class="tab-content hidden space-y-4">
       <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl space-y-4">
         
@@ -249,11 +249,9 @@
           🔄 MUAT ATAU REFRESH DATA DARI SERVER
         </button>
 
-        <!-- Hasil Tabel Pencarian -->
+        <!-- Hasil Tabel Pencarian Lengkap -->
         <div class="overflow-x-auto rounded-xl border border-slate-700 mt-2">
-          <!-- Hasil Tabel Pencarian Lengkap -->
-        <div class="overflow-x-auto rounded-xl border border-slate-700 mt-2">
-          <table id="nasabahTable" class="w-full text-left text-xs text-slate-300 min-w-[1500px]">
+          <table id="nasabahTable" class="w-full text-left text-xs text-slate-300 min-w-[1600px]">
             <thead class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 sticky top-0">
               <tr>
                 <th class="p-3">No</th>
@@ -273,19 +271,19 @@
                 <th class="p-3">Tgl Jatuh Tempo</th>
                 <th class="p-3">Program</th>
                 <th class="p-3">Approval</th>
+                <th class="p-3">Foto Bukti</th> <!-- TABEL HEADER FOTO BUKTI -->
                 <th class="p-3">Keterangan</th>
                 <th class="p-3">Input By</th>
               </tr>
             </thead>
             <tbody id="tableBody" class="divide-y divide-slate-800">
               <tr>
-                <td colspan="19" class="p-6 text-center text-slate-500">
+                <td colspan="20" class="p-6 text-center text-slate-500">
                   Klik tombol "Muat Data" di atas untuk memuat data nasabah.
                 </td>
               </tr>
             </tbody>
           </table>
-        </div>
         </div>
 
       </div>
@@ -293,7 +291,7 @@
 
   </main>
 
-  <!-- FLOATING BOTTOM NAVIGATION BAR (ANDROID STYLE) -->
+  <!-- FLOATING BOTTOM NAVIGATION BAR -->
   <nav class="fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur border-t border-slate-700/80 z-50">
     <div class="max-w-md mx-auto grid grid-cols-3 h-16">
       
@@ -319,14 +317,13 @@
   </nav>
 
   <!-- LOGIKA JAVASCRIPT -->
-    <script>
-    // PASTE WEB APP URL DARI GOOGLE APPS SCRIPT ANDA DI SINI!
+  <script>
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzxxiTfo71CKJgjMlPVmfcyP9TXpqzos08aKfwrgS9s_Q20r1i4aQLnVkxqNt61HNQO/exec";
-	
-	let currentUser = null;
+    
+    let currentUser = null;
     let masterNasabahData = [];
-    let currentFilteredData = []; // Variabel untuk menyimpan data yang lolos filter saja
-	let base64FotoBukti = ""; // Variabel penampung string foto
+    let currentFilteredData = [];
+    let base64FotoBukti = "";
 
     // Function Preview & Compress Foto ke Base64
     function previewFotoBukti(event) {
@@ -342,7 +339,6 @@
         const img = new Image();
         img.src = e.target.result;
         img.onload = function() {
-          // Resize & Kompres gambar agar tidak memberatkan Google Sheets (Max width/height 800px)
           const canvas = document.createElement('canvas');
           let width = img.width;
           let height = img.height;
@@ -361,10 +357,8 @@
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, width, height);
 
-          // Output JPEG kualitas 0.7
           base64FotoBukti = canvas.toDataURL('image/jpeg', 0.7);
 
-          // Tampilkan Preview
           document.getElementById('imgPreview').src = base64FotoBukti;
           document.getElementById('previewContainer').classList.remove('hidden');
           document.getElementById('txtFotoSize').innerText = `Foto siap diupload (${Math.round(base64FotoBukti.length / 1024)} KB)`;
@@ -377,7 +371,7 @@
       navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Reg failed:', err));
     }
 
-    // Switch Tab View (Floating Navigation)
+    // Switch Tab View
     function switchTab(tabName) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
       document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('block'));
@@ -404,7 +398,7 @@
       }
     }
 
-    // Login Form Handler
+    // Login Form Handler (Menggunakan text/plain untuk CORS Safe)
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btnLogin');
@@ -418,7 +412,11 @@
       };
 
       try {
-        const res = await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const res = await fetch(GAS_API_URL, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload) 
+        });
         const data = await res.json();
 
         if (data.status === 'success') {
@@ -473,6 +471,7 @@
 
       const res = await fetch(GAS_API_URL, {
         method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
         body: JSON.stringify({ action: 'addFinance', namaFinance: nama })
       });
       const result = await res.json();
@@ -512,15 +511,23 @@
         program: document.getElementById('inputProgram').value,
         keterangan: document.getElementById('inputKeterangan').value,
         approval: document.getElementById('inputApproval').value,
-        fotoBukti: base64FotoBukti, // Send Base64 String
+        fotoBukti: base64FotoBukti,
         createdBy: currentUser.nama
       };
 
       try {
-        const res = await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const res = await fetch(GAS_API_URL, { 
+          method: 'POST', 
+          headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+          body: JSON.stringify(payload) 
+        });
         const data = await res.json();
         alert(data.message || "Data berhasil disimpan!");
+        
+        // Reset Form & Preview
         document.getElementById('nasabahForm').reset();
+        base64FotoBukti = "";
+        document.getElementById('previewContainer').classList.add('hidden');
         fetchNasabahData();
       } catch (err) {
         alert("Gagal menyimpan data nasabah!");
@@ -530,7 +537,7 @@
       }
     });
 
-    // Kalkulasi Angsuran Ke- Otomatis (Bulan Sekarang - Bulan Timestamp Input)
+    // Kalkulasi Angsuran Ke- Otomatis
     function calculateAngsuranKe(timestampStr) {
       if (!timestampStr) return 1;
       const dateInput = new Date(timestampStr);
@@ -544,7 +551,7 @@
     // Fetch Nasabah Data
     async function fetchNasabahData() {
       const tbody = document.getElementById('tableBody');
-      tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Sedang mengambil data dari Google Sheets...</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="20" class="p-6 text-center text-slate-400">Sedang mengambil data dari Google Sheets...</td></tr>`;
 
       try {
         const res = await fetch(`${GAS_API_URL}?action=getNasabah`);
@@ -554,14 +561,13 @@
           masterNasabahData = result.data;
           applyLocalFilter();
         } else {
-          tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-red-400">Gagal memuat data dari server.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="20" class="p-6 text-center text-red-400">Gagal memuat data dari server.</td></tr>`;
         }
       } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-red-400">Terjadi kesalahan koneksi saat memuat data.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="20" class="p-6 text-center text-red-400">Terjadi kesalahan koneksi saat memuat data.</td></tr>`;
       }
     }
 
-// Apply Local Filter & Render Table
     // Apply Local Filter & Render Table Lengkap
     function applyLocalFilter() {
       const tbody = document.getElementById('tableBody');
@@ -569,9 +575,6 @@
       const filterAngsuran = document.getElementById('filterAngsuran').value;
       const filterApproval = document.getElementById('filterApproval').value;
       const filterLimit = document.getElementById('filterLimit').value;
-	  const btnFoto = item.FotoBukti && item.FotoBukti.startsWith("http") 
-    ? `<a href="${item.FotoBukti}" target="_blank" class="text-blue-400 underline font-semibold">Lihat Foto</a>` 
-    : '-';
 
       currentFilteredData = masterNasabahData.filter(item => {
         const nikStr = String(item.NIK !== undefined && item.NIK !== null ? item.NIK : '').toLowerCase();
@@ -593,7 +596,7 @@
 
       tbody.innerHTML = '';
       if (currentFilteredData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="19" class="p-6 text-center text-slate-500">Tidak ada data nasabah yang sesuai.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="20" class="p-6 text-center text-slate-500">Tidak ada data nasabah yang sesuai.</td></tr>`;
         return;
       }
 
@@ -604,12 +607,17 @@
         const angsuranKe = calculateAngsuranKe(item.Timestamp);
         const isApproved = String(item.Approval).toUpperCase() === 'YA';
 
-        // Format Kontak Darurat 1 & 2
         const k1 = item.Kontak1 ? `${item.Kontak1} (${item.Telp1 || '-'})` : '-';
         const k2 = item.Kontak2 ? `${item.Kontak2} (${item.Telp2 || '-'})` : '-';
-
-        // Format Tanggal Jatuh Tempo
         const tglJT = item.TglJatuhTempo ? new Date(item.TglJatuhTempo).toLocaleDateString('id-ID') : '-';
+
+        // Render Link Foto Bukti jika ada
+        const fotoUrl = item.FotoBukti || item.Foto;
+        const btnFoto = (fotoUrl && String(fotoUrl).startsWith("http"))
+          ? `<a href="${fotoUrl}" target="_blank" class="inline-flex items-center gap-1 text-xs text-blue-400 hover:text-blue-300 font-semibold underline bg-blue-500/10 px-2 py-1 rounded border border-blue-500/20">
+               🖼️ Lihat Foto
+             </a>`
+          : `<span class="text-slate-500 text-[11px]">-</span>`;
 
         tbody.innerHTML += `
           <tr class="hover:bg-slate-800/80 transition border-b border-slate-800 whitespace-nowrap">
@@ -634,6 +642,7 @@
                 ${item.Approval || '-'}
               </span>
             </td>
+            <td class="p-3">${btnFoto}</td>
             <td class="p-3 max-w-xs truncate">${item.Keterangan || '-'}</td>
             <td class="p-3 text-slate-400 text-[11px]">${item.CreatedBy || '-'}</td>
           </tr>
@@ -641,8 +650,7 @@
       });
     }
 
-    // Export Table Data (HANYA DATA YANG SUDAH DI-FILTER)
-	// Export Table Data ke PDF (HANYA DATA YANG SUDAH DI-FILTER)
+    // Export Table Data ke PDF
     function exportToPDF() {
       if (!currentFilteredData || currentFilteredData.length === 0) {
         alert("Tidak ada data hasil filter yang bisa di-export ke PDF!");
@@ -650,10 +658,8 @@
       }
 
       const { jsPDF } = window.jspdf;
-      // Gunakan orientasi Landscape (L) agar tabel muat dengan rapi
       const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-      // Judul Laporan PDF
       doc.setFontSize(16);
       doc.text("WTF APP - Laporan Hasil Filter Data Nasabah", 14, 15);
       
@@ -661,12 +667,10 @@
       doc.setTextColor(100);
       doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')} | Total Data: ${currentFilteredData.length}`, 14, 22);
 
-      // Baris Header Tabel
       const tableHeaders = [
         ["No", "NIK", "Nama Nasabah", "Finance", "Pinjaman", "Sisa Limit", "Angsuran", "Approval", "No. Telp"]
       ];
 
-      // Baris Data
       const tableRows = currentFilteredData.map((item, idx) => {
         const limitKredit = Number(item.LimitKredit || 0);
         const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
@@ -686,13 +690,12 @@
         ];
       });
 
-      // Render Tabel menggunakan autoTable
       doc.autoTable({
         head: tableHeaders,
         body: tableRows,
         startY: 26,
         theme: 'grid',
-        headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' }, // Blue header
+        headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' },
         styles: { fontSize: 8, cellPadding: 2.5 },
         columnStyles: {
           0: { cellWidth: 10 },
@@ -700,17 +703,16 @@
         }
       });
 
-      // Download File PDF
       doc.save(`WTF_APP_Data_Nasabah_${new Date().toISOString().slice(0,10)}.pdf`);
     }
-	
+
+    // Export Table Data ke Excel
     function exportToExcel() {
       if (!currentFilteredData || currentFilteredData.length === 0) {
         alert("Tidak ada data hasil filter yang bisa di-export!");
         return;
       }
 
-      // Gunakan currentFilteredData agar hanya data hasil pencarian yang di-export
       const exportData = currentFilteredData.map((item, idx) => {
         const limitKredit = Number(item.LimitKredit || 0);
         const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
@@ -737,8 +739,9 @@
           "Angsuran Ke-": angsuranKe,
           "Tgl Jatuh Tempo": item.TglJatuhTempo || '',
           "Program": item.Program || '',
-          "Keterangan": item.Keterangan || '',
           "Approval": item.Approval || '',
+          "Link Foto Bukti": item.FotoBukti || item.Foto || '-',
+          "Keterangan": item.Keterangan || '',
           "Created By": item.CreatedBy || ''
         };
       });
