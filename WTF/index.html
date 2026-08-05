@@ -393,10 +393,12 @@
         targetNav.classList.add('text-blue-500', 'font-semibold');
       }
 
+      // Baris pemicu otomatis dihapus agar data tidak termuat sebelum tombol diklik
+      /* 
       if (tabName === 'cari' && masterNasabahData.length === 0) {
         fetchNasabahData();
       }
-    }
+      */
 
     // Login Form Handler (Menggunakan text/plain untuk CORS Safe)
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
