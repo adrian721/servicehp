@@ -1,25 +1,761 @@
-const CACHE_NAME = 'wtf-app-v2';
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
-  'https://cdn.tailwindcss.com'
-];
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WTF APP</title>
+  
+  <!-- Manifest & Theme Color -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#2563eb">
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
-});
+  <!-- Ikon untuk Android & Favicon Browser -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((response) => {
-      return response || fetch(e.request);
-    })
-  );
-});
+  <!-- Ikon khusus iOS (iPhone / iPad) -->
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  
+  <style>
+    body { padding-bottom: 80px; } /* Ruang untuk floating navbar bottom */
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
+
+  <!-- TOP HEADER -->
+  <header class="bg-slate-800/90 backdrop-blur border-b border-slate-700/80 p-4 sticky top-0 z-40 flex justify-between items-center">
+    <div class="flex items-center gap-2">
+      <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-500/30">W</div>
+      <div>
+        <h1 class="text-base font-bold text-white leading-none">WTF APP</h1>
+        <span id="headerUserInfo" class="text-[11px] text-slate-400">Belum Login</span>
+      </div>
+    </div>
+    <button id="btnLogout" onclick="logout()" class="hidden bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 text-xs px-3 py-1.5 rounded-lg transition font-medium">Logout</button>
+  </header>
+
+  <!-- MAIN CONTAINER (3 TAB VIEWS) -->
+  <main class="max-w-4xl mx-auto p-4">
+
+    <!-- TAB 1: MENU LOGIN -->
+    <section id="tab-login" class="tab-content block">
+      <div class="min-h-[70vh] flex items-center justify-center">
+        <div class="bg-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl w-full max-w-sm border border-slate-700">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-blue-600/20 text-blue-500 rounded-2xl flex items-center justify-center mx-auto mb-3 text-2xl font-black border border-blue-500/30">
+              WTF
+            </div>
+            <h2 class="text-2xl font-black text-white tracking-wide">Selamat Datang</h2>
+            <p class="text-slate-400 text-xs mt-1">Masuk untuk mengelola data nasabah</p>
+          </div>
+          <form id="loginForm" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Username</label>
+              <input type="text" id="username" placeholder="Masukkan username" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-300 mb-1">Password</label>
+              <input type="password" id="password" placeholder="••••••••" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm text-white focus:outline-none focus:border-blue-500 transition">
+            </div>
+            <button type="submit" id="btnLogin" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-blue-600/30 transition text-sm">LOGIN AKUN</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: MENU INPUT NASABAH -->
+    <section id="tab-input" class="tab-content hidden space-y-4">
+      <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl">
+        <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-700">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+              Input Data Calon Nasabah
+            </h2>
+            <p class="text-xs text-slate-400">Angsuran ke- dihitung otomatis oleh sistem berdasarkan bulan penginputan.</p>
+          </div>
+        </div>
+
+        <form id="nasabahForm" class="grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs">
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">NIK <span class="text-red-400">*</span></label>
+            <input type="text" id="inputNik" required placeholder="16 digit NIK" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Nama Nasabah <span class="text-red-400">*</span></label>
+            <input type="text" id="inputNama" required placeholder="Nama lengkap" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">No. Telepon <span class="text-red-400">*</span></label>
+            <input type="tel" id="inputTelp" required placeholder="08xxxxxxxxxx" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:outline-none">
+          </div>
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Alamat Nasabah <span class="text-red-400">*</span></label>
+            <input type="text" id="inputAlamat" required placeholder="Alamat rumah" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:outline-none">
+          </div>
+
+          <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-700/60 space-y-2">
+            <span class="font-bold text-slate-300 block text-[11px]">Kontak Darurat 1</span>
+            <input type="text" id="inputKontak1" placeholder="Nama Kontak 1" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
+            <input type="tel" id="inputTelp1" placeholder="No. Telp Kontak 1" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
+          </div>
+
+          <div class="p-3 bg-slate-900/60 rounded-xl border border-slate-700/60 space-y-2">
+            <span class="font-bold text-slate-300 block text-[11px]">Kontak Darurat 2</span>
+            <input type="text" id="inputKontak2" placeholder="Nama Kontak 2" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
+            <input type="tel" id="inputTelp2" placeholder="No. Telp Kontak 2" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-white">
+          </div>
+
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Finance / Leasing <span class="text-red-400">*</span></label>
+            <div class="flex gap-1.5">
+              <select id="inputFinance" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:border-blue-500 focus:outline-none"></select>
+              <button type="button" id="btnAddFinance" onclick="addFinanceOption()" class="hidden bg-emerald-600 hover:bg-emerald-500 text-white px-3 rounded-lg font-bold text-lg">+</button>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Unit yang Dikredit</label>
+            <input type="text" id="inputUnit" placeholder="Contoh: Honda Beat 2024" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+          </div>
+
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Limit Kredit (Rp) <span class="text-red-400">*</span></label>
+            <input type="number" id="inputLimit" required placeholder="10000000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+          </div>
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Jumlah Pinjaman (Rp) <span class="text-red-400">*</span></label>
+            <input type="number" id="inputPinjaman" required placeholder="7000000" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+          </div>
+
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Tenor (Bulan)</label>
+            <input type="number" id="inputTenor" placeholder="12" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+          </div>
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Tanggal Jatuh Tempo</label>
+            <input type="date" id="inputTglJatuhTempo" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+          </div>
+
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Program</label>
+            <input type="text" id="inputProgram" placeholder="Nama program / promo" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+          </div>
+          <div>
+            <label class="text-slate-300 font-medium block mb-1">Status Approval <span class="text-red-400">*</span></label>
+            <select id="inputApproval" required class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+              <option value="YA">YA</option>
+              <option value="TIDAK">TIDAK</option>
+            </select>
+          </div>
+
+          <div class="md:col-span-2">
+            <label class="text-slate-300 font-medium block mb-1">Keterangan Catatan</label>
+            <input type="text" id="inputKeterangan" placeholder="Catatan tambahan..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white">
+          </div>
+		  
+		  <!-- Fitur Upload / Jepret Foto Bukti Penerimaan -->
+          <div class="md:col-span-2">
+            <label class="text-slate-300 font-medium block mb-1">
+              Foto Bukti Penerimaan (Kamera / File)
+            </label>
+            <div class="flex flex-col sm:flex-row gap-2 items-center">
+              <input type="file" id="inputFotoBukti" accept="image/*" capture="environment" onchange="previewFotoBukti(event)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white file:mr-3 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-500">
+            </div>
+            
+            <!-- Preview Foto -->
+            <div id="previewContainer" class="hidden mt-2 p-2 bg-slate-900 rounded-lg border border-slate-700 text-center">
+              <img id="imgPreview" src="" alt="Preview Bukti" class="max-h-40 mx-auto rounded border border-slate-700 shadow-md">
+              <span id="txtFotoSize" class="text-[10px] text-slate-400 block mt-1"></span>
+            </div>
+          </div>
+
+          <div class="md:col-span-2 mt-3">
+            <button type="submit" id="btnSubmitNasabah" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg shadow-emerald-600/30 transition text-sm">
+              SIMPAN DATA NASABAH
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 3: MENU CARI & FILTER DATA + EXPORT EXCEL -->
+    <section id="tab-cari" class="tab-content hidden space-y-4">
+      <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-xl space-y-4">
+        
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-700 pb-3">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+              Pencarian & Filter Nasabah
+            </h2>
+            <p class="text-xs text-slate-400">Filter berdasarkan NIK, sisa limit, angsuran, atau status approval</p>
+          </div>
+          
+          <!-- Tombol Export Excel & PDF -->
+          <div class="flex gap-2 self-start sm:self-auto">
+            <button onclick="exportToExcel()" class="bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-400 border border-emerald-500/30 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 font-semibold transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              Excel
+            </button>
+            <button onclick="exportToPDF()" class="bg-red-600/20 hover:bg-red-600/30 text-red-400 border border-red-500/30 text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 font-semibold transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+              PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2.5">
+          <div>
+            <label class="text-[11px] text-slate-400 font-medium block mb-1">Cari NIK / Nama</label>
+            <input type="text" id="searchNik" onkeyup="applyLocalFilter()" placeholder="Ketik NIK / Nama..." class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          </div>
+
+          <div>
+            <label class="text-[11px] text-slate-400 font-medium block mb-1">Filter Angsuran</label>
+            <select id="filterAngsuran" onchange="applyLocalFilter()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+              <option value="">Semua Angsuran</option>
+              <option value="3_plus">Angsuran > 3 Bulan</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[11px] text-slate-400 font-medium block mb-1">Status Approval</label>
+            <select id="filterApproval" onchange="applyLocalFilter()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+              <option value="">Semua Status</option>
+              <option value="YA">Approval: YA</option>
+              <option value="TIDAK">Approval: TIDAK</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-[11px] text-slate-400 font-medium block mb-1">Limit Belum Terpakai</label>
+            <select id="filterLimit" onchange="applyLocalFilter()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white">
+              <option value="">Semua Limit</option>
+              <option value="1m_plus">Sisa Limit > Rp 1.000.000</option>
+            </select>
+          </div>
+        </div>
+
+        <button onclick="fetchNasabahData()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md shadow-blue-600/20">
+          🔄 MUAT ATAU REFRESH DATA DARI SERVER
+        </button>
+
+        <!-- Hasil Tabel Pencarian -->
+        <div class="overflow-x-auto rounded-xl border border-slate-700 mt-2">
+          <!-- Hasil Tabel Pencarian Lengkap -->
+        <div class="overflow-x-auto rounded-xl border border-slate-700 mt-2">
+          <table id="nasabahTable" class="w-full text-left text-xs text-slate-300 min-w-[1500px]">
+            <thead class="bg-slate-900 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700 sticky top-0">
+              <tr>
+                <th class="p-3">No</th>
+                <th class="p-3">NIK</th>
+                <th class="p-3">Nama Nasabah</th>
+                <th class="p-3">No. Telp</th>
+                <th class="p-3">Alamat</th>
+                <th class="p-3">Kontak Darurat 1</th>
+                <th class="p-3">Kontak Darurat 2</th>
+                <th class="p-3">Finance</th>
+                <th class="p-3">Unit</th>
+                <th class="p-3">Limit Kredit</th>
+                <th class="p-3">Pinjaman</th>
+                <th class="p-3">Sisa Limit</th>
+                <th class="p-3">Tenor</th>
+                <th class="p-3">Angsuran Ke-</th>
+                <th class="p-3">Tgl Jatuh Tempo</th>
+                <th class="p-3">Program</th>
+                <th class="p-3">Approval</th>
+                <th class="p-3">Keterangan</th>
+                <th class="p-3">Input By</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody" class="divide-y divide-slate-800">
+              <tr>
+                <td colspan="19" class="p-6 text-center text-slate-500">
+                  Klik tombol "Muat Data" di atas untuk memuat data nasabah.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FLOATING BOTTOM NAVIGATION BAR (ANDROID STYLE) -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-slate-800/95 backdrop-blur border-t border-slate-700/80 z-50">
+    <div class="max-w-md mx-auto grid grid-cols-3 h-16">
+      
+      <!-- Button 1: Login / Profil -->
+      <button onclick="switchTab('login')" id="nav-login" class="nav-btn flex flex-col items-center justify-center gap-1 text-blue-500 font-semibold transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+        <span class="text-[11px]" id="nav-login-label">Login</span>
+      </button>
+
+      <!-- Button 2: Input -->
+      <button onclick="switchTab('input')" id="nav-input" class="nav-btn flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-200 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span class="text-[11px]">Input</span>
+      </button>
+
+      <!-- Button 3: Cari -->
+      <button onclick="switchTab('cari')" id="nav-cari" class="nav-btn flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-200 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        <span class="text-[11px]">Cari</span>
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- LOGIKA JAVASCRIPT -->
+    <script>
+    // PASTE WEB APP URL DARI GOOGLE APPS SCRIPT ANDA DI SINI!
+    const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzxxiTfo71CKJgjMlPVmfcyP9TXpqzos08aKfwrgS9s_Q20r1i4aQLnVkxqNt61HNQO/exec";
+	
+	let currentUser = null;
+    let masterNasabahData = [];
+    let currentFilteredData = []; // Variabel untuk menyimpan data yang lolos filter saja
+	let base64FotoBukti = ""; // Variabel penampung string foto
+
+    // Function Preview & Compress Foto ke Base64
+    function previewFotoBukti(event) {
+      const file = event.target.files[0];
+      if (!file) {
+        base64FotoBukti = "";
+        document.getElementById('previewContainer').classList.add('hidden');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.src = e.target.result;
+        img.onload = function() {
+          // Resize & Kompres gambar agar tidak memberatkan Google Sheets (Max width/height 800px)
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 800;
+
+          if (width > height && width > maxDim) {
+            height *= maxDim / width;
+            width = maxDim;
+          } else if (height > maxDim) {
+            width *= maxDim / height;
+            height = maxDim;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Output JPEG kualitas 0.7
+          base64FotoBukti = canvas.toDataURL('image/jpeg', 0.7);
+
+          // Tampilkan Preview
+          document.getElementById('imgPreview').src = base64FotoBukti;
+          document.getElementById('previewContainer').classList.remove('hidden');
+          document.getElementById('txtFotoSize').innerText = `Foto siap diupload (${Math.round(base64FotoBukti.length / 1024)} KB)`;
+        };
+      };
+      reader.readAsDataURL(file);
+    }
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Reg failed:', err));
+    }
+
+    // Switch Tab View (Floating Navigation)
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('block'));
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('text-blue-500', 'font-semibold');
+        btn.classList.add('text-slate-400');
+      });
+
+      const targetTab = document.getElementById(`tab-${tabName}`);
+      if (targetTab) {
+        targetTab.classList.remove('hidden');
+        targetTab.classList.add('block');
+      }
+
+      const targetNav = document.getElementById(`nav-${tabName}`);
+      if (targetNav) {
+        targetNav.classList.remove('text-slate-400');
+        targetNav.classList.add('text-blue-500', 'font-semibold');
+      }
+
+      if (tabName === 'cari' && masterNasabahData.length === 0) {
+        fetchNasabahData();
+      }
+    }
+
+    // Login Form Handler
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('btnLogin');
+      btn.innerText = "Memverifikasi...";
+      btn.disabled = true;
+
+      const payload = {
+        action: 'login',
+        username: document.getElementById('username').value,
+        password: document.getElementById('password').value
+      };
+
+      try {
+        const res = await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+          currentUser = data;
+          document.getElementById('headerUserInfo').innerText = `${data.nama} (${data.role.toUpperCase()})`;
+          document.getElementById('nav-login-label').innerText = 'Profil';
+          document.getElementById('btnLogout').classList.remove('hidden');
+
+          if (data.role === 'admin') {
+            document.getElementById('btnAddFinance').classList.remove('hidden');
+          }
+
+          loadFinanceDropdown();
+          alert(`Selamat datang, ${data.nama}!`);
+          switchTab('cari');
+        } else {
+          alert(data.message || "Username / Password salah.");
+        }
+      } catch (err) {
+        alert("Gagal koneksi ke server Apps Script!");
+      } finally {
+        btn.innerText = "LOGIN AKUN";
+        btn.disabled = false;
+      }
+    });
+
+    // Load Dropdown Finance
+    async function loadFinanceDropdown() {
+      try {
+        const res = await fetch(`${GAS_API_URL}?action=getFinance`);
+        const data = await res.json();
+        const select = document.getElementById('inputFinance');
+        select.innerHTML = '<option value="">-- Pilih Leasing --</option>';
+        if (data.data && Array.isArray(data.data)) {
+          data.data.forEach(item => {
+            if (item) select.innerHTML += `<option value="${item}">${item}</option>`;
+          });
+        }
+      } catch (e) {
+        console.error("Gagal load Finance", e);
+      }
+    }
+
+    // Tambah Opsi Finance (Admin Only)
+    async function addFinanceOption() {
+      if (!currentUser || currentUser.role !== 'admin') {
+        alert("Hanya Admin yang dapat menambah Finance!");
+        return;
+      }
+      const nama = prompt("Masukkan nama Finance baru:");
+      if (!nama) return;
+
+      const res = await fetch(GAS_API_URL, {
+        method: 'POST',
+        body: JSON.stringify({ action: 'addFinance', namaFinance: nama })
+      });
+      const result = await res.json();
+      alert(result.message);
+      loadFinanceDropdown();
+    }
+
+    // Submit Nasabah Form
+    document.getElementById('nasabahForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!currentUser) {
+        alert("Anda harus login terlebih dahulu!");
+        switchTab('login');
+        return;
+      }
+
+      const btn = document.getElementById('btnSubmitNasabah');
+      btn.innerText = "Menyimpan Data...";
+      btn.disabled = true;
+
+      const payload = {
+        action: 'saveNasabah',
+        nik: document.getElementById('inputNik').value,
+        nama: document.getElementById('inputNama').value,
+        alamat: document.getElementById('inputAlamat').value,
+        noTelp: document.getElementById('inputTelp').value,
+        kontak1: document.getElementById('inputKontak1').value,
+        telp1: document.getElementById('inputTelp1').value,
+        kontak2: document.getElementById('inputKontak2').value,
+        telp2: document.getElementById('inputTelp2').value,
+        finance: document.getElementById('inputFinance').value,
+        limitKredit: document.getElementById('inputLimit').value,
+        jumlahPinjaman: document.getElementById('inputPinjaman').value,
+        unit: document.getElementById('inputUnit').value,
+        tenor: document.getElementById('inputTenor').value,
+        tglJatuhTempo: document.getElementById('inputTglJatuhTempo').value,
+        program: document.getElementById('inputProgram').value,
+        keterangan: document.getElementById('inputKeterangan').value,
+        approval: document.getElementById('inputApproval').value,
+        fotoBukti: base64FotoBukti, // Send Base64 String
+        createdBy: currentUser.nama
+      };
+
+      try {
+        const res = await fetch(GAS_API_URL, { method: 'POST', body: JSON.stringify(payload) });
+        const data = await res.json();
+        alert(data.message || "Data berhasil disimpan!");
+        document.getElementById('nasabahForm').reset();
+        fetchNasabahData();
+      } catch (err) {
+        alert("Gagal menyimpan data nasabah!");
+      } finally {
+        btn.innerText = "SIMPAN DATA NASABAH";
+        btn.disabled = false;
+      }
+    });
+
+    // Kalkulasi Angsuran Ke- Otomatis (Bulan Sekarang - Bulan Timestamp Input)
+    function calculateAngsuranKe(timestampStr) {
+      if (!timestampStr) return 1;
+      const dateInput = new Date(timestampStr);
+      if (isNaN(dateInput.getTime())) return 1;
+
+      const now = new Date();
+      const monthDiff = (now.getFullYear() - dateInput.getFullYear()) * 12 + (now.getMonth() - dateInput.getMonth());
+      return monthDiff < 0 ? 0 : monthDiff;
+    }
+
+    // Fetch Nasabah Data
+    async function fetchNasabahData() {
+      const tbody = document.getElementById('tableBody');
+      tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-400">Sedang mengambil data dari Google Sheets...</td></tr>`;
+
+      try {
+        const res = await fetch(`${GAS_API_URL}?action=getNasabah`);
+        const result = await res.json();
+        
+        if (result.status === 'success' && Array.isArray(result.data)) {
+          masterNasabahData = result.data;
+          applyLocalFilter();
+        } else {
+          tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-red-400">Gagal memuat data dari server.</td></tr>`;
+        }
+      } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-red-400">Terjadi kesalahan koneksi saat memuat data.</td></tr>`;
+      }
+    }
+
+// Apply Local Filter & Render Table
+    // Apply Local Filter & Render Table Lengkap
+    function applyLocalFilter() {
+      const tbody = document.getElementById('tableBody');
+      const searchVal = document.getElementById('searchNik').value.trim().toLowerCase();
+      const filterAngsuran = document.getElementById('filterAngsuran').value;
+      const filterApproval = document.getElementById('filterApproval').value;
+      const filterLimit = document.getElementById('filterLimit').value;
+
+      currentFilteredData = masterNasabahData.filter(item => {
+        const nikStr = String(item.NIK !== undefined && item.NIK !== null ? item.NIK : '').toLowerCase();
+        const namaStr = String(item.Nama !== undefined && item.Nama !== null ? item.Nama : '').toLowerCase();
+        const matchSearch = !searchVal || nikStr.includes(searchVal) || namaStr.includes(searchVal);
+
+        const angsuranKeCalculated = calculateAngsuranKe(item.Timestamp);
+        const matchAngsuran = filterAngsuran !== '3_plus' || angsuranKeCalculated > 3;
+
+        const matchApproval = !filterApproval || String(item.Approval).toUpperCase() === filterApproval.toUpperCase();
+
+        const limitKredit = Number(item.LimitKredit || 0);
+        const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
+        const sisaLimit = limitKredit - jumlahPinjaman;
+        const matchLimit = filterLimit !== '1m_plus' || sisaLimit > 1000000;
+
+        return matchSearch && matchAngsuran && matchApproval && matchLimit;
+      });
+
+      tbody.innerHTML = '';
+      if (currentFilteredData.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="19" class="p-6 text-center text-slate-500">Tidak ada data nasabah yang sesuai.</td></tr>`;
+        return;
+      }
+
+      currentFilteredData.forEach((item, idx) => {
+        const limitKredit = Number(item.LimitKredit || 0);
+        const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
+        const sisaLimit = limitKredit - jumlahPinjaman;
+        const angsuranKe = calculateAngsuranKe(item.Timestamp);
+        const isApproved = String(item.Approval).toUpperCase() === 'YA';
+
+        // Format Kontak Darurat 1 & 2
+        const k1 = item.Kontak1 ? `${item.Kontak1} (${item.Telp1 || '-'})` : '-';
+        const k2 = item.Kontak2 ? `${item.Kontak2} (${item.Telp2 || '-'})` : '-';
+
+        // Format Tanggal Jatuh Tempo
+        const tglJT = item.TglJatuhTempo ? new Date(item.TglJatuhTempo).toLocaleDateString('id-ID') : '-';
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-800/80 transition border-b border-slate-800 whitespace-nowrap">
+            <td class="p-3 text-slate-500">${idx + 1}</td>
+            <td class="p-3 font-mono text-white font-medium">${item.NIK || '-'}</td>
+            <td class="p-3 font-semibold text-white">${item.Nama || '-'}</td>
+            <td class="p-3">${item.NoTelp || '-'}</td>
+            <td class="p-3 max-w-xs truncate">${item.Alamat || '-'}</td>
+            <td class="p-3">${k1}</td>
+            <td class="p-3">${k2}</td>
+            <td class="p-3 font-medium text-blue-300">${item.Finance || '-'}</td>
+            <td class="p-3">${item.Unit || '-'}</td>
+            <td class="p-3">Rp ${limitKredit.toLocaleString('id-ID')}</td>
+            <td class="p-3">Rp ${jumlahPinjaman.toLocaleString('id-ID')}</td>
+            <td class="p-3 font-semibold ${sisaLimit > 1000000 ? 'text-emerald-400' : 'text-slate-300'}">Rp ${sisaLimit.toLocaleString('id-ID')}</td>
+            <td class="p-3">${item.Tenor ? item.Tenor + ' Bln' : '-'}</td>
+            <td class="p-3 font-bold text-blue-400">${angsuranKe} Bln</td>
+            <td class="p-3">${tglJT}</td>
+            <td class="p-3">${item.Program || '-'}</td>
+            <td class="p-3">
+              <span class="px-2.5 py-1 rounded-md text-[10px] font-bold ${isApproved ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/20 text-red-400 border border-red-500/30'}">
+                ${item.Approval || '-'}
+              </span>
+            </td>
+            <td class="p-3 max-w-xs truncate">${item.Keterangan || '-'}</td>
+            <td class="p-3 text-slate-400 text-[11px]">${item.CreatedBy || '-'}</td>
+          </tr>
+        `;
+      });
+    }
+
+    // Export Table Data (HANYA DATA YANG SUDAH DI-FILTER)
+	// Export Table Data ke PDF (HANYA DATA YANG SUDAH DI-FILTER)
+    function exportToPDF() {
+      if (!currentFilteredData || currentFilteredData.length === 0) {
+        alert("Tidak ada data hasil filter yang bisa di-export ke PDF!");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      // Gunakan orientasi Landscape (L) agar tabel muat dengan rapi
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+      // Judul Laporan PDF
+      doc.setFontSize(16);
+      doc.text("WTF APP - Laporan Hasil Filter Data Nasabah", 14, 15);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Tanggal Cetak: ${new Date().toLocaleDateString('id-ID')} | Total Data: ${currentFilteredData.length}`, 14, 22);
+
+      // Baris Header Tabel
+      const tableHeaders = [
+        ["No", "NIK", "Nama Nasabah", "Finance", "Pinjaman", "Sisa Limit", "Angsuran", "Approval", "No. Telp"]
+      ];
+
+      // Baris Data
+      const tableRows = currentFilteredData.map((item, idx) => {
+        const limitKredit = Number(item.LimitKredit || 0);
+        const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
+        const sisaLimit = limitKredit - jumlahPinjaman;
+        const angsuranKe = calculateAngsuranKe(item.Timestamp);
+
+        return [
+          idx + 1,
+          item.NIK || '-',
+          item.Nama || '-',
+          item.Finance || '-',
+          `Rp ${jumlahPinjaman.toLocaleString('id-ID')}`,
+          `Rp ${sisaLimit.toLocaleString('id-ID')}`,
+          `${angsuranKe} Bln`,
+          item.Approval || '-',
+          item.NoTelp || '-'
+        ];
+      });
+
+      // Render Tabel menggunakan autoTable
+      doc.autoTable({
+        head: tableHeaders,
+        body: tableRows,
+        startY: 26,
+        theme: 'grid',
+        headStyles: { fillColor: [37, 99, 235], textColor: 255, fontStyle: 'bold' }, // Blue header
+        styles: { fontSize: 8, cellPadding: 2.5 },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          1: { fontStyle: 'bold' }
+        }
+      });
+
+      // Download File PDF
+      doc.save(`WTF_APP_Data_Nasabah_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+	
+    function exportToExcel() {
+      if (!currentFilteredData || currentFilteredData.length === 0) {
+        alert("Tidak ada data hasil filter yang bisa di-export!");
+        return;
+      }
+
+      // Gunakan currentFilteredData agar hanya data hasil pencarian yang di-export
+      const exportData = currentFilteredData.map((item, idx) => {
+        const limitKredit = Number(item.LimitKredit || 0);
+        const jumlahPinjaman = Number(item.JumlahPinjaman || 0);
+        const sisaLimit = limitKredit - jumlahPinjaman;
+        const angsuranKe = calculateAngsuranKe(item.Timestamp);
+
+        return {
+          "No": idx + 1,
+          "Tanggal Input": item.Timestamp ? new Date(item.Timestamp).toLocaleDateString('id-ID') : '-',
+          "NIK": item.NIK || '',
+          "Nama Nasabah": item.Nama || '',
+          "Alamat": item.Alamat || '',
+          "No Telp": item.NoTelp || '',
+          "Kontak Darurat 1": item.Kontak1 || '',
+          "Telp Kontak 1": item.Telp1 || '',
+          "Kontak Darurat 2": item.Kontak2 || '',
+          "Telp Kontak 2": item.Telp2 || '',
+          "Finance": item.Finance || '',
+          "Limit Kredit": limitKredit,
+          "Jumlah Pinjaman": jumlahPinjaman,
+          "Limit Belum Terpakai": sisaLimit,
+          "Unit Kredit": item.Unit || '',
+          "Tenor (Bulan)": item.Tenor || '',
+          "Angsuran Ke-": angsuranKe,
+          "Tgl Jatuh Tempo": item.TglJatuhTempo || '',
+          "Program": item.Program || '',
+          "Keterangan": item.Keterangan || '',
+          "Approval": item.Approval || '',
+          "Created By": item.CreatedBy || ''
+        };
+      });
+
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Hasil Filter Nasabah");
+
+      XLSX.writeFile(workbook, `WTF_APP_Hasil_Filter_${new Date().toISOString().slice(0,10)}.xlsx`);
+    }
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('headerUserInfo').innerText = 'Belum Login';
+      document.getElementById('nav-login-label').innerText = 'Login';
+      document.getElementById('btnLogout').classList.add('hidden');
+      document.getElementById('btnAddFinance').classList.add('hidden');
+      alert("Anda telah logout.");
+      switchTab('login');
+    }
+  </script>
+</body>
+</html>
