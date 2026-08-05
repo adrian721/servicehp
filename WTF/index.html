@@ -267,16 +267,13 @@
   </nav>
 
   <!-- LOGIKA JAVASCRIPT -->
-  let currentUser = null;
-    let masterNasabahData = [];
-    let currentFilteredData = []; // Variabel untuk menyimpan data yang lolos filter saja
-	
-  <script>
+    <script>
     // PASTE WEB APP URL DARI GOOGLE APPS SCRIPT ANDA DI SINI!
     const GAS_API_URL = "https://script.google.com/macros/s/AKfycbzxxiTfo71CKJgjMlPVmfcyP9TXpqzos08aKfwrgS9s_Q20r1i4aQLnVkxqNt61HNQO/exec";
-
-    let currentUser = null;
+	
+	let currentUser = null;
     let masterNasabahData = [];
+    let currentFilteredData = []; // Variabel untuk menyimpan data yang lolos filter saja
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(err => console.log('SW Reg failed:', err));
