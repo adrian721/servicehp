@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Management User</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans antialiased">
+
+  <div class="flex min-h-screen">
+    <!-- SIDEBAR -->
+    <aside class="w-64 bg-slate-800 border-r border-slate-700 hidden md:flex flex-col justify-between p-4">
+      <div class="space-y-6">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 px-2">
+          <div class="w-10 h-10 rounded-xl bg-brand-600 flex items-center justify-center font-black text-white text-xl shadow-lg shadow-brand-500/30">
+            A
+          </div>
+          <div>
+            <h2 class="font-bold text-white leading-tight">AdminPanel</h2>
+            <span class="text-xs text-slate-400">User Management</span>
+          </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="space-y-1">
+          <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-brand-600 text-white font-medium text-sm transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            User Management
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-white font-medium text-sm transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            Roles & Permissions
+          </a>
+          <a href="#" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:bg-slate-700/50 hover:text-white font-medium text-sm transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            Activity Logs
+          </a>
+        </nav>
+      </div>
+
+      <!-- Admin Profile Bottom -->
+      <div class="pt-4 border-t border-slate-700 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-slate-700 flex items-center justify-center font-bold text-white text-sm">
+            AD
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-white">Super Admin</p>
+            <p class="text-[10px] text-slate-400">admin@domain.com</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="flex-1 p-6 lg:p-8 overflow-y-auto">
+      
+      <!-- TOP HEADER -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-2xl font-bold text-white">Management User</h1>
+          <p class="text-xs text-slate-400 mt-1">Kelola data pengguna, hak akses role, serta status akun sistem.</p>
+        </div>
+        <button onclick="openModal('add')" class="bg-brand-600 hover:bg-brand-500 text-white font-semibold text-sm px-4 py-2.5 rounded-xl shadow-lg shadow-brand-600/30 transition flex items-center gap-2 self-start sm:self-auto">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+          Tambah User Baru
+        </button>
+      </div>
+
+      <!-- STATISTIK CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+          <span class="text-xs text-slate-400 font-medium">Total User</span>
+          <div class="flex items-center justify-between mt-2">
+            <span id="statTotal" class="text-2xl font-bold text-white">0</span>
+            <span class="p-2 bg-blue-500/10 text-blue-400 rounded-lg text-xs font-bold">Semua</span>
+          </div>
+        </div>
+        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+          <span class="text-xs text-slate-400 font-medium">User Aktif</span>
+          <div class="flex items-center justify-between mt-2">
+            <span id="statActive" class="text-2xl font-bold text-emerald-400">0</span>
+            <span class="p-2 bg-emerald-500/10 text-emerald-400 rounded-lg text-xs font-bold">Active</span>
+          </div>
+        </div>
+        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+          <span class="text-xs text-slate-400 font-medium">Pending Approval</span>
+          <div class="flex items-center justify-between mt-2">
+            <span id="statPending" class="text-2xl font-bold text-amber-400">0</span>
+            <span class="p-2 bg-amber-500/10 text-amber-400 rounded-lg text-xs font-bold">Pending</span>
+          </div>
+        </div>
+        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700">
+          <span class="text-xs text-slate-400 font-medium">Nonaktif / Blocked</span>
+          <div class="flex items-center justify-between mt-2">
+            <span id="statBlocked" class="text-2xl font-bold text-red-400">0</span>
+            <span class="p-2 bg-red-500/10 text-red-400 rounded-lg text-xs font-bold">Blocked</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER & SEARCH BAR -->
+      <div class="bg-slate-800 p-4 rounded-2xl border border-slate-700 mb-6 flex flex-col md:flex-row gap-3 justify-between items-center">
+        <!-- Input Search -->
+        <div class="relative w-full md:w-80">
+          <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+          <input type="text" id="searchInput" onkeyup="renderUsers()" placeholder="Cari nama atau email..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+        </div>
+
+        <!-- Filter Role & Status -->
+        <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <select id="filterRole" onchange="renderUsers()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+            <option value="">Semua Role</option>
+            <option value="Admin">Admin</option>
+            <option value="Editor">Editor</option>
+            <option value="Viewer">Viewer</option>
+          </select>
+
+          <select id="filterStatus" onchange="renderUsers()" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-brand-500">
+            <option value="">Semua Status</option>
+            <option value="Active">Active</option>
+            <option value="Pending">Pending</option>
+            <option value="Blocked">Blocked</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- TABEL DATA USER -->
+      <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-900/80 uppercase text-[10px] tracking-wider text-slate-400 border-b border-slate-700">
+              <tr>
+                <th class="p-4">User</th>
+                <th class="p-4">Role</th>
+                <th class="p-4">Status</th>
+                <th class="p-4">Tanggal Daftar</th>
+                <th class="p-4 text-right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody" class="divide-y divide-slate-700/60">
+              <!-- Render otomatis via JavaScript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- MODAL FORM (TAMBAH / EDIT USER) -->
+  <div id="userModal" class="fixed inset-0 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl w-full max-w-md p-6 shadow-2xl space-y-5">
+      <div class="flex justify-between items-center border-b border-slate-700 pb-3">
+        <h3 id="modalTitle" class="text-base font-bold text-white">Tambah User Baru</h3>
+        <button onclick="closeModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+      </div>
+
+      <form id="userForm" onsubmit="handleFormSubmit(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="userId">
+        
+        <div>
+          <label class="block text-slate-300 font-medium mb-1">Nama Lengkap <span class="text-red-400">*</span></label>
+          <input type="text" id="inputNama" required placeholder="Contoh: Budi Santoso" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-brand-500">
+        </div>
+
+        <div>
+          <label class="block text-slate-300 font-medium mb-1">Email <span class="text-red-400">*</span></label>
+          <input type="email" id="inputEmail" required placeholder="budi@example.com" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-brand-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-medium mb-1">Role <span class="text-red-400">*</span></label>
+            <select id="inputRole" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-brand-500">
+              <option value="Admin">Admin</option>
+              <option value="Editor">Editor</option>
+              <option value="Viewer">Viewer</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-slate-300 font-medium mb-1">Status <span class="text-red-400">*</span></label>
+            <select id="inputStatus" required class="w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-white focus:outline-none focus:border-brand-500">
+              <option value="Active">Active</option>
+              <option value="Pending">Pending</option>
+              <option value="Blocked">Blocked</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-700">
+          <button type="button" onclick="closeModal()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-semibold transition">Batal</button>
+          <button type="submit" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-semibold transition">Simpan Data</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // Initial Dummy Data Users
+    let users = [
+      { id: 1, nama: "Ahmad Rizky", email: "ahmad@example.com", role: "Admin", status: "Active", date: "2026-01-15" },
+      { id: 2, nama: "Siti Rahmawati", email: "siti@example.com", role: "Editor", status: "Active", date: "2026-02-02" },
+      { id: 3, nama: "Budi Pratama", email: "budi@example.com", role: "Viewer", status: "Pending", date: "2026-02-10" },
+      { id: 4, nama: "Dian Pelangi", email: "dian@example.com", role: "Editor", status: "Blocked", date: "2025-11-20" }
+    ];
+
+    // Render Data Users ke Tabel
+    function renderUsers() {
+      const tbody = document.getElementById('userTableBody');
+      const searchVal = document.getElementById('searchInput').value.toLowerCase();
+      const roleVal = document.getElementById('filterRole').value;
+      const statusVal = document.getElementById('filterStatus').value;
+
+      // Filter Data
+      const filtered = users.filter(user => {
+        const matchSearch = user.nama.toLowerCase().includes(searchVal) || user.email.toLowerCase().includes(searchVal);
+        const matchRole = !roleVal || user.role === roleVal;
+        const matchStatus = !statusVal || user.status === statusVal;
+        return matchSearch && matchRole && matchStatus;
+      });
+
+      tbody.innerHTML = '';
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Tidak ada data user yang ditemukan.</td></tr>`;
+        updateStats();
+        return;
+      }
+
+      filtered.forEach(user => {
+        // Badge Status Styling
+        let statusBadge = '';
+        if (user.status === 'Active') {
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">Active</span>`;
+        } else if (user.status === 'Pending') {
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">Pending</span>`;
+        } else {
+          statusBadge = `<span class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-500/10 text-red-400 border border-red-500/20">Blocked</span>`;
+        }
+
+        // Initials Avatar
+        const initials = user.nama.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+
+        tbody.innerHTML += `
+          <tr class="hover:bg-slate-700/30 transition">
+            <td class="p-4 flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-brand-600/20 text-brand-400 flex items-center justify-center font-bold text-xs border border-brand-500/30">
+                ${initials}
+              </div>
+              <div>
+                <p class="font-semibold text-white">${user.nama}</p>
+                <p class="text-[11px] text-slate-400">${user.email}</p>
+              </div>
+            </td>
+            <td class="p-4 font-medium text-slate-300">${user.role}</td>
+            <td class="p-4">${statusBadge}</td>
+            <td class="p-4 text-slate-400">${user.date}</td>
+            <td class="p-4 text-right space-x-2">
+              <button onclick="editUser(${user.id})" class="text-blue-400 hover:text-blue-300 font-medium">Edit</button>
+              <button onclick="deleteUser(${user.id})" class="text-red-400 hover:text-red-300 font-medium">Hapus</button>
+            </td>
+          </tr>
+        `;
+      });
+
+      updateStats();
+    }
+
+    // Update Statistik Header
+    function updateStats() {
+      document.getElementById('statTotal').innerText = users.length;
+      document.getElementById('statActive').innerText = users.filter(u => u.status === 'Active').length;
+      document.getElementById('statPending').innerText = users.filter(u => u.status === 'Pending').length;
+      document.getElementById('statBlocked').innerText = users.filter(u => u.status === 'Blocked').length;
+    }
+
+    // Modal Operations
+    function openModal(mode, id = null) {
+      const modal = document.getElementById('userModal');
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+
+      if (mode === 'add') {
+        document.getElementById('modalTitle').innerText = 'Tambah User Baru';
+        document.getElementById('userForm').reset();
+        document.getElementById('userId').value = '';
+      } else if (mode === 'edit' && id) {
+        document.getElementById('modalTitle').innerText = 'Edit Data User';
+        const user = users.find(u => u.id === id);
+        if (user) {
+          document.getElementById('userId').value = user.id;
+          document.getElementById('inputNama').value = user.nama;
+          document.getElementById('inputEmail').value = user.email;
+          document.getElementById('inputRole').value = user.role;
+          document.getElementById('inputStatus').value = user.status;
+        }
+      }
+    }
+
+    function closeModal() {
+      const modal = document.getElementById('userModal');
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+
+    // Handle Form Submit (Add / Edit)
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('userId').value;
+      const nama = document.getElementById('inputNama').value;
+      const email = document.getElementById('inputEmail').value;
+      const role = document.getElementById('inputRole').value;
+      const status = document.getElementById('inputStatus').value;
+
+      if (id) {
+        // Edit Mode
+        const index = users.findIndex(u => u.id == id);
+        if (index !== -1) {
+          users[index] = { ...users[index], nama, email, role, status };
+        }
+      } else {
+        // Add Mode
+        const newUser = {
+          id: Date.now(),
+          nama,
+          email,
+          role,
+          status,
+          date: new Date().toISOString().split('T')[0]
+        };
+        users.push(newUser);
+      }
+
+      closeModal();
+      renderUsers();
+    }
+
+    // Edit User Trigger
+    function editUser(id) {
+      openModal('edit', id);
+    }
+
+    // Delete User
+    function deleteUser(id) {
+      if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
+        users = users.filter(u => u.id !== id);
+        renderUsers();
+      }
+    }
+
+    // First Load
+    renderUsers();
+  </script>
+</body>
+</html>
