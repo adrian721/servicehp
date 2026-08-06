@@ -237,7 +237,7 @@
     }
     window.addEventListener('DOMContentLoaded', loadProducts);
 
-    // SUBMIT ORDER SEWA (BEBAS KENDALA CORS)
+// SUBMIT ORDER SEWA (VERSI FIX REDIRECT & NO NETWORK ERROR)
     document.getElementById('rentalForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const whatsapp = document.getElementById('whatsapp').value.trim();
@@ -261,19 +261,25 @@
         formData.append('harga', harga);
         formData.append('paket', paket);
 
+        // KUNCI PERBAIKAN 1: redirect mode 'follow'
         const res = await fetch(GAS_URL, {
           method: 'POST',
-          body: formData
+          body: formData,
+          redirect: 'follow'
         });
 
-        const data = await res.json();
+        // KUNCI PERBAIKAN 2: Ambil sebagai teks dulu baru parsing
+        const responseText = await res.text();
+        const data = JSON.parse(responseText);
 
         if (data.status === "SUCCESS") {
           currentOrderId = data.orderId;
           document.getElementById('totalPay').innerText = "Rp " + Number(data.totalPay).toLocaleString('id-ID');
 
+          // Generate Dynamic QRIS
           const dynamicQris = makeDynamicQris(data.qrisString, data.totalPay);
           document.getElementById('qrcode').innerHTML = "";
+          
           new QRCode(document.getElementById("qrcode"), {
             text: dynamicQris,
             width: 180,
@@ -281,6 +287,7 @@
             correctLevel: QRCode.CorrectLevel.L
           });
 
+          // Tampilkan Area Pembayaran
           document.getElementById('qrisContainer').classList.remove('hidden');
           document.getElementById('expiredBox').classList.add('hidden');
           document.getElementById('accountBox').classList.add('hidden');
@@ -290,12 +297,12 @@
           startAutoCheck();
 
         } else {
-          alert("Gagal membuat pesanan.");
+          alert("Gagal membuat pesanan: " + (data.message || "Respon server tidak valid"));
         }
 
       } catch (err) {
-        console.error("Fetch error:", err);
-        alert("Terjadi kesalahan jaringan.");
+        console.error("Detail error:", err);
+        alert("Terjadi kesalahan membaca data pembayaran.");
       } finally {
         btn.innerText = "Sewa Sekarang";
         btn.disabled = false;
