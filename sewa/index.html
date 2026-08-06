@@ -237,7 +237,7 @@
     }
     window.addEventListener('DOMContentLoaded', loadProducts);
 
-// SUBMIT ORDER SEWA (VERSI FIX REDIRECT & NO NETWORK ERROR)
+// SUBMIT ORDER SEWA (FIX RESPON DATA PEMBAYARAN)
     document.getElementById('rentalForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const whatsapp = document.getElementById('whatsapp').value.trim();
@@ -261,18 +261,27 @@
         formData.append('harga', harga);
         formData.append('paket', paket);
 
-        // KUNCI PERBAIKAN 1: redirect mode 'follow'
         const res = await fetch(GAS_URL, {
           method: 'POST',
-          body: formData,
-          redirect: 'follow'
+          body: formData
         });
 
-        // KUNCI PERBAIKAN 2: Ambil sebagai teks dulu baru parsing
         const responseText = await res.text();
-        const data = JSON.parse(responseText);
+        let data;
 
-        if (data.status === "SUCCESS") {
+        try {
+          data = JSON.parse(responseText);
+        } catch (jsonErr) {
+          // Jika terkena redirect Google HTML, coba ekstrak JSON dari teks
+          const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            data = JSON.parse(jsonMatch[0]);
+          } else {
+            throw new Error("Respon bukan JSON valid");
+          }
+        }
+
+        if (data && data.status === "SUCCESS") {
           currentOrderId = data.orderId;
           document.getElementById('totalPay').innerText = "Rp " + Number(data.totalPay).toLocaleString('id-ID');
 
@@ -287,7 +296,7 @@
             correctLevel: QRCode.CorrectLevel.L
           });
 
-          // Tampilkan Area Pembayaran
+          // Tampilkan Area Pembayaran & Barcode
           document.getElementById('qrisContainer').classList.remove('hidden');
           document.getElementById('expiredBox').classList.add('hidden');
           document.getElementById('accountBox').classList.add('hidden');
@@ -297,18 +306,17 @@
           startAutoCheck();
 
         } else {
-          alert("Gagal membuat pesanan: " + (data.message || "Respon server tidak valid"));
+          alert("Gagal membuat pesanan: " + (data.message || "Respon tidak sesuai"));
         }
 
       } catch (err) {
-        console.error("Detail error:", err);
-        alert("Terjadi kesalahan membaca data pembayaran.");
+        console.error("Detail error parsing:", err);
+        alert("Terjadi kesalahan membaca data pembayaran. Silakan coba lagi.");
       } finally {
         btn.innerText = "Sewa Sekarang";
         btn.disabled = false;
       }
     });
-
     // SUBMIT LUPA AKUN
     document.getElementById('lupaForm').addEventListener('submit', async (e) => {
       e.preventDefault();
