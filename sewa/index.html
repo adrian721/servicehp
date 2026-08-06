@@ -27,23 +27,71 @@
     </div>
 
     <!-- HALAMAN 1: FORM SEWA -->
-    <div id="pageSewa">
-      <form id="rentalForm" class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Nomor WhatsApp</label>
-          <input type="tel" id="whatsapp" required placeholder="08123456789" maxlength="13" class="w-full bg-slate-700 text-white rounded-lg p-3 border border-slate-600 focus:outline-none focus:border-amber-400">
-          <span class="text-[10px] text-slate-400">Format: 08xx (10 - 13 digit angka)</span>
-        </div>
+    // SUBMIT ORDER SEWA (VERSI BEBAS CORS ERROR)
+document.getElementById('rentalForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const whatsapp = document.getElementById('whatsapp').value.trim();
 
-        <div>
-          <label class="block text-xs font-semibold uppercase tracking-wider text-slate-300 mb-1">Pilih Paket Durasi</label>
-          <select id="paket" class="w-full bg-slate-700 text-white rounded-lg p-3 border border-slate-600 focus:outline-none focus:border-amber-400">
-            <option value="">-- Memuat Paket... --</option>
-          </select>
-        </div>
+  if (!validateWA(whatsapp)) {
+    alert("Nomor WhatsApp tidak valid!\nPastikan diawali '08' dan terdiri dari 10 - 13 digit angka.");
+    return;
+  }
 
-        <button type="submit" id="btnSubmit" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-900 font-bold py-3 rounded-lg transition">Sewa Sekarang</button>
-      </form>
+  const btn = document.getElementById('btnSubmit');
+  btn.innerText = "Processing...";
+  btn.disabled = true;
+
+  const select = document.getElementById('paket');
+  const harga = select.value;
+  const paket = select.options[select.selectedIndex].text;
+
+  try {
+    // Kunci Perbaikan: Gunakan URLSearchParams untuk menghindari preflight CORS browser
+    const formData = new URLSearchParams();
+    formData.append('whatsapp', whatsapp);
+    formData.append('harga', harga);
+    formData.append('paket', paket);
+
+    const res = await fetch(GAS_URL, {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.status === "SUCCESS") {
+      currentOrderId = data.orderId;
+      document.getElementById('totalPay').innerText = "Rp " + Number(data.totalPay).toLocaleString('id-ID');
+
+      const dynamicQris = makeDynamicQris(data.qrisString, data.totalPay);
+      document.getElementById('qrcode').innerHTML = "";
+      new QRCode(document.getElementById("qrcode"), {
+        text: dynamicQris,
+        width: 180,
+        height: 180,
+        correctLevel: QRCode.CorrectLevel.L
+      });
+
+      document.getElementById('qrisContainer').classList.remove('hidden');
+      document.getElementById('expiredBox').classList.add('hidden');
+      document.getElementById('accountBox').classList.add('hidden');
+      document.getElementById('paymentArea').classList.remove('hidden');
+
+      startCountdown(300);
+      startAutoCheck();
+
+    } else {
+      alert("Gagal membuat pesanan: " + (data.message || "Respon server tidak valid"));
+    }
+
+  } catch (err) {
+    console.error("Detail Error:", err);
+    alert("Terjadi kesalahan jaringan atau koneksi ditolak server.");
+  } finally {
+    btn.innerText = "Sewa Sekarang";
+    btn.disabled = false;
+  }
+});
 
       <!-- AREA PEMBAYARAN -->
       <div id="paymentArea" class="hidden mt-6 pt-6 border-t border-slate-700 text-center">
