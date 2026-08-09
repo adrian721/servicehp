@@ -3,255 +3,279 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kasir Toko Multi Cabang</title>
-  <!-- Tailwind CSS CDN untuk styling cepat -->
+  <title>Sistem Kasir Multi-Cabang</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Styling Khusus Cetak Struk Thermal */
+    @media print {
+      body * { visibility: hidden; }
+      #thermalReceipt, #thermalReceipt * { visibility: visible; }
+      #thermalReceipt {
+        position: absolute; left: 0; top: 0; width: 58mm;
+        font-family: monospace; font-size: 10px; padding: 5px;
+      }
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-4">
+<body class="bg-gray-100 min-h-screen text-gray-800">
 
-  <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-    
-    <!-- KOLOM KIRI: KATALOG PRODUK -->
-    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-md">
-      <div class="flex justify-between items-center mb-4">
-        <h1 class="text-xl font-bold text-gray-800">Katalog Produk</h1>
-        <span id="branchBadge" class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">Cabang: BR001</span>
-      </div>
-
-      <!-- Pilih Produk Manual / Scanner Barcode -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+  <!-- ==================== FORM LOGIN MODAL ==================== -->
+  <div id="loginModal" class="fixed inset-0 bg-gray-900 bg-opacity-80 flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-sm">
+      <h2 class="text-2xl font-bold text-center mb-6 text-blue-600">POS Toko Cabang</h2>
+      <div class="space-y-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Produk</label>
-          <select id="productSelect" class="w-full border border-gray-300 p-2 rounded-md focus:ring-2 focus:ring-blue-500">
+          <label class="block text-sm font-medium">Username</label>
+          <input type="text" id="inputUser" class="w-full border p-2 rounded mt-1" placeholder="kasir1 / admin">
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Password</label>
+          <input type="password" id="inputPass" class="w-full border p-2 rounded mt-1" placeholder="••••••••">
+        </div>
+        <button onclick="login()" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700">
+          Masuk Sistem
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== NAVBAR UTAMA ==================== -->
+  <nav class="bg-white shadow px-6 py-4 flex justify-between items-center">
+    <div class="flex items-center gap-4">
+      <h1 class="text-xl font-bold text-blue-600">MultiBranch POS</h1>
+      <span id="badgeBranch" class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded-full font-bold">BR001</span>
+      <span id="badgeOffline" class="hidden bg-amber-100 text-amber-800 text-xs px-2.5 py-1 rounded-full font-bold">Offline (Pending Sync)</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <span id="labelUser" class="text-sm font-medium text-gray-600"></span>
+      <button onclick="logout()" class="text-sm bg-red-50 text-red-600 px-3 py-1 rounded hover:bg-red-100">Logout</button>
+    </div>
+  </nav>
+
+  <!-- ==================== KONTEN UTAMA (KASIR & REPORT) ==================== -->
+  <div class="max-w-7xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+    
+    <!-- KOLOM KIRI: KATALOG & KERANJANG -->
+    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow">
+      <h2 class="text-lg font-bold mb-4">Kasir Transaksi</h2>
+      
+      <div class="grid grid-cols-3 gap-4 mb-6">
+        <div class="col-span-2">
+          <label class="text-xs font-semibold text-gray-500">Pilih Produk</label>
+          <select id="selectProduct" class="w-full border p-2 rounded">
             <option value="">-- Pilih Barang --</option>
             <option value="PRD001" data-name="Minyak Goreng 1L" data-price="17000">Minyak Goreng 1L - Rp 17.000</option>
             <option value="PRD002" data-name="Gula Pasir 1Kg" data-price="15000">Gula Pasir 1Kg - Rp 15.000</option>
-            <option value="PRD003" data-name="Beras 5Kg" data-price="68000">Beras 5Kg - Rp 68.000</option>
+            <option value="PRD003" data-name="Beras Super 5Kg" data-price="68000">Beras Super 5Kg - Rp 68.000</option>
           </select>
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Jumlah (Qty)</label>
+          <label class="text-xs font-semibold text-gray-500">Qty</label>
           <div class="flex gap-2">
-            <input type="number" id="itemQty" value="1" min="1" class="w-full border border-gray-300 p-2 rounded-md">
-            <button onclick="addToCart()" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md">
-              + Tambah
-            </button>
+            <input type="number" id="inputQty" value="1" min="1" class="w-full border p-2 rounded">
+            <button onclick="addToCart()" class="bg-blue-600 text-white px-4 rounded font-bold">+</button>
           </div>
         </div>
       </div>
 
-      <!-- Tabel Keranjang Belanja -->
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="border-b text-sm font-semibold text-gray-600 bg-gray-50">
-              <th class="p-2">Produk</th>
-              <th class="p-2">Harga</th>
-              <th class="p-2">Qty</th>
-              <th class="p-2">Subtotal</th>
-              <th class="p-2 text-center">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="cartTableBody" class="text-sm">
-            <!-- Item keranjang akan muncul di sini secara dinamis -->
-          </tbody>
-        </table>
-      </div>
+      <!-- Tabel Keranjang -->
+      <table class="w-full text-left border-collapse mb-4">
+        <thead>
+          <tr class="bg-gray-50 text-xs text-gray-500 border-b">
+            <th class="p-2">Item</th><th class="p-2">Harga</th><th class="p-2">Qty</th><th class="p-2">Subtotal</th><th class="p-2">Hapus</th>
+          </tr>
+        </thead>
+        <tbody id="cartBody" class="text-sm"></tbody>
+      </table>
     </div>
 
     <!-- KOLOM KANAN: RINGKASAN PEMBAYARAN -->
-    <div class="bg-white p-6 rounded-lg shadow-md flex flex-col justify-between">
+    <div class="bg-white p-6 rounded-lg shadow flex flex-col justify-between">
       <div>
-        <h2 class="text-xl font-bold text-gray-800 mb-4">Ringkasan</h2>
-        
-        <div class="space-y-3 border-b pb-4 mb-4">
-          <div class="flex justify-between text-gray-600">
-            <span>No. Nota:</span>
-            <span id="invoiceNum" class="font-mono font-bold text-gray-800"></span>
-          </div>
-          <div class="flex justify-between text-gray-600">
-            <span>Metode Bayar:</span>
-            <select id="paymentMethod" class="border border-gray-300 rounded p-1 text-sm">
+        <h2 class="text-lg font-bold mb-4">Pembayaran</h2>
+        <div class="space-y-2 text-sm border-b pb-4 mb-4">
+          <div class="flex justify-between"><span class="text-gray-500">Nota:</span><span id="textInvoice" class="font-mono font-bold"></span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Metode:</span>
+            <select id="selectPayment" class="border rounded px-1">
               <option value="CASH">CASH</option>
               <option value="QRIS">QRIS</option>
-              <option value="DEBIT">DEBIT</option>
             </select>
           </div>
         </div>
-
-        <div class="bg-gray-50 p-4 rounded-lg mb-6">
-          <span class="text-sm text-gray-500 block">Total Tagihan:</span>
-          <span id="grandTotal" class="text-3xl font-extrabold text-blue-600">Rp 0</span>
+        <div class="bg-blue-50 p-4 rounded-lg mb-4">
+          <span class="text-xs text-blue-600 font-bold uppercase">Total Tagihan</span>
+          <div id="textTotal" class="text-3xl font-extrabold text-blue-700">Rp 0</div>
         </div>
       </div>
-
-      <!-- Tombol Bayar -->
-      <button id="btnSubmit" onclick="processCheckout()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg text-lg transition duration-200">
-        Bayar & Kirim
+      <button id="btnPay" onclick="processPayment()" class="w-full bg-green-600 text-white text-lg font-bold py-3 rounded hover:bg-green-700">
+        Bayar & Cetak Struk
       </button>
+    </div>
+
+    <!-- DASHBOARD LAPORAN KEUANGAN (ADMIN PUSAT) -->
+    <div id="adminPanel" class="hidden md:col-span-3 bg-white p-6 rounded-lg shadow mt-4">
+      <h2 class="text-lg font-bold mb-4">📊 Laporan Keuangan Bulanan (Admin Only)</h2>
+      <div class="flex gap-4 mb-4">
+        <input type="month" id="reportMonth" class="border p-2 rounded" value="2026-08">
+        <select id="reportBranch" class="border p-2 rounded">
+          <option value="ALL">Konsolidasi (Semua Cabang)</option>
+          <option value="BR001">Cabang BR001</option>
+        </select>
+        <button onclick="fetchReport()" class="bg-indigo-600 text-white px-4 py-2 rounded font-bold">Load Laporan</button>
+      </div>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="bg-gray-50 p-4 rounded"><span class="text-xs text-gray-500">Omset</span><h3 id="repRevenue" class="text-xl font-bold">Rp 0</h3></div>
+        <div class="bg-gray-50 p-4 rounded"><span class="text-xs text-gray-500">HPP</span><h3 id="repHpp" class="text-xl font-bold">Rp 0</h3></div>
+        <div class="bg-green-50 p-4 rounded"><span class="text-xs text-green-600 font-bold">Laba Kotor</span><h3 id="repProfit" class="text-xl font-bold text-green-700">Rp 0</h3></div>
+      </div>
     </div>
 
   </div>
 
+  <!-- TEMPLATE STRUK THERMAL (HIDDEN IN SCREEN) -->
+  <div id="thermalReceipt" class="hidden">
+    <div style="text-align: center;">
+      <h3>TOKO KITA</h3>
+      <p id="rcpBranch"></p>
+      <p>--------------------------------</p>
+    </div>
+    <div id="rcpItems"></div>
+    <p>--------------------------------</p>
+    <div id="rcpTotal" style="text-align: right; font-weight: bold;"></div>
+    <div style="text-align: center; margin-top: 10px;">Terima Kasih!</div>
+  </div>
+
   <script>
-    // -------------------------------------------------------------
-    // KONFIGURASI KASIR
-    // -------------------------------------------------------------
-    // GANTI SAMA URL WEB APP DARI GOOGLE APPS SCRIPT ANDA
-    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwg1Qo_40jtWPzYGp-OTpjz_wHTUVqAEqxpQjD1GRN7WJTxYczwBM7dWNbH_xRVu7H3Bg/exec";
-    
-    const CURRENT_BRANCH = "BR001";
-    const CURRENT_USER = "USR01";
+    // URL WEB APP APPS SCRIPT ANDA
+    const API_URL = "https://script.google.com/macros/s/AKfycbwg1Qo_40jtWPzYGp-OTpjz_wHTUVqAEqxpQjD1GRN7WJTxYczwBM7dWNbH_xRVu7H3Bg/exec";
+
     let cart = [];
+    let currentUser = null;
 
-    // Inisialisasi No Nota Otomatis
-    function generateInvoiceNumber() {
-      const now = new Date();
-      const dateStr = now.getFullYear().toString() +
-                      String(now.getMonth() + 1).padStart(2, '0') +
-                      String(now.getDate()).padStart(2, '0');
-      const randomId = Math.floor(1000 + Math.random() * 9000);
-      return `INV/${CURRENT_BRANCH}/${dateStr}/${randomId}`;
+    window.onload = function() {
+      const saved = localStorage.getItem('activeUser');
+      if (saved) {
+        currentUser = JSON.parse(saved);
+        initApp();
+      }
+    };
+
+    function login() {
+      const u = document.getElementById('inputUser').value;
+      const p = document.getElementById('inputPass').value;
+      
+      fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: "login", username: u, password: p })
+      }).then(res => res.json()).then(res => {
+        if(res.status === "success") {
+          currentUser = res.user;
+          localStorage.setItem('activeUser', JSON.stringify(currentUser));
+          initApp();
+        } else { alert(res.message); }
+      });
     }
 
-    let currentInvoice = generateInvoiceNumber();
-    document.getElementById('invoiceNum').innerText = currentInvoice;
+    function initApp() {
+      document.getElementById('loginModal').classList.add('hidden');
+      document.getElementById('labelUser').innerText = `${currentUser.full_name} (${currentUser.role})`;
+      document.getElementById('badgeBranch').innerText = currentUser.branch_id || 'PUSAT';
+      document.getElementById('textInvoice').innerText = `INV/${currentUser.branch_id || 'PST'}/${Date.now().toString().slice(-6)}`;
+      
+      if(currentUser.role === 'admin_pusat') {
+        document.getElementById('adminPanel').classList.remove('hidden');
+      }
+    }
 
-    // -------------------------------------------------------------
-    // MANAJEMEN KERANJANG
-    // -------------------------------------------------------------
     function addToCart() {
-      const select = document.getElementById('productSelect');
-      const selectedOption = select.options[select.selectedIndex];
-      const qtyInput = document.getElementById('itemQty');
+      const s = document.getElementById('selectProduct');
+      const opt = s.options[s.selectedIndex];
+      if(!s.value) return;
 
-      if (!select.value) {
-        alert("Pilih barang terlebih dahulu!");
-        return;
-      }
+      const pId = s.value;
+      const name = opt.getAttribute('data-name');
+      const price = parseInt(opt.getAttribute('data-price'));
+      const qty = parseInt(document.getElementById('inputQty').value);
 
-      const productId = select.value;
-      const productName = selectedOption.getAttribute('data-name');
-      const price = parseInt(selectedOption.getAttribute('data-price'));
-      const quantity = parseInt(qtyInput.value);
+      const exist = cart.find(i => i.product_id === pId);
+      if(exist) { exist.quantity += qty; exist.subtotal = exist.quantity * price; }
+      else { cart.push({ product_id: pId, name: name, price: price, quantity: qty, subtotal: price * qty }); }
 
-      // Cek apakah item sudah ada di keranjang
-      const existingItem = cart.find(item => item.product_id === productId);
-      if (existingItem) {
-        existingItem.quantity += quantity;
-        existingItem.subtotal = existingItem.quantity * existingItem.price;
-      } else {
-        cart.push({
-          product_id: productId,
-          name: productName,
-          price: price,
-          quantity: quantity,
-          subtotal: price * quantity
-        });
-      }
-
-      // Reset Form Input & Render Ulang
-      select.value = "";
-      qtyInput.value = 1;
-      renderCart();
-    }
-
-    function removeFromCart(productId) {
-      cart = cart.filter(item => item.product_id !== productId);
       renderCart();
     }
 
     function renderCart() {
-      const tbody = document.getElementById('cartTableBody');
-      const grandTotalElem = document.getElementById('grandTotal');
-      tbody.innerHTML = "";
-
-      let grandTotal = 0;
-
-      if (cart.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400">Keranjang masih kosong</td></tr>`;
-      } else {
-        cart.forEach(item => {
-          grandTotal += item.subtotal;
-          const tr = document.createElement('tr');
-          tr.className = "border-b hover:bg-gray-50";
-          tr.innerHTML = `
-            <td class="p-2">${item.name}</td>
-            <td class="p-2">Rp ${item.price.toLocaleString('id-ID')}</td>
-            <td class="p-2">${item.quantity}</td>
-            <td class="p-2 font-medium">Rp ${item.subtotal.toLocaleString('id-ID')}</td>
-            <td class="p-2 text-center">
-              <button onclick="removeFromCart('${item.product_id}')" class="text-red-500 hover:text-red-700 font-bold">✕</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      }
-
-      grandTotalElem.innerText = `Rp ${grandTotal.toLocaleString('id-ID')}`;
+      const tbody = document.getElementById('cartBody');
+      tbody.innerHTML = '';
+      let total = 0;
+      cart.forEach((i, idx) => {
+        total += i.subtotal;
+        tbody.innerHTML += `<tr>
+          <td class="p-2">${i.name}</td><td class="p-2">${i.price}</td><td class="p-2">${i.quantity}</td>
+          <td class="p-2">Rp ${i.subtotal}</td>
+          <td class="p-2"><button onclick="cart.splice(${idx},1);renderCart()" class="text-red-500 font-bold">✕</button></td>
+        </tr>`;
+      });
+      document.getElementById('textTotal').innerText = `Rp ${total.toLocaleString('id-ID')}`;
     }
 
-    // -------------------------------------------------------------
-    // PROSES PROSES PEMBAYARAN & KIRIM KE GOOGLE APPS SCRIPT
-    // -------------------------------------------------------------
-    async function processCheckout() {
-      if (cart.length === 0) {
-        alert("Keranjang masih kosong!");
-        return;
-      }
-
-      const btnSubmit = document.getElementById('btnSubmit');
-      btnSubmit.disabled = true;
-      btnSubmit.innerText = "Memproses...";
-
-      // Hitung Total Akhir
-      const totalAmount = cart.reduce((sum, item) => sum + item.subtotal, 0);
-
-      // Susun Payload JSON sesuai ekspektasi doPost(e) di Google Apps Script
+    async function processPayment() {
+      if(cart.length === 0) return alert("Keranjang kosong!");
+      
       const payload = {
-        invoice_number: currentInvoice,
-        branch_id: CURRENT_BRANCH,
-        user_id: CURRENT_USER,
-        total_amount: totalAmount,
-        payment_method: document.getElementById('paymentMethod').value,
-        items: cart.map(item => ({
-          product_id: item.product_id,
-          price: item.price,
-          quantity: item.quantity,
-          subtotal: item.subtotal
-        }))
+        action: "createTransaction",
+        invoice_number: document.getElementById('textInvoice').innerText,
+        branch_id: currentUser.branch_id || "BR001",
+        user_id: currentUser.user_id,
+        total_amount: cart.reduce((sum, i) => sum + i.subtotal, 0),
+        payment_method: document.getElementById('selectPayment').value,
+        items: cart
       };
 
-      try {
-        // Kirim HTTP POST ke Apps Script
-        // Menggunakan mode 'no-cors' jika mengalami isu CORS standar di lingkungan browser
-        const response = await fetch(GAS_WEB_APP_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8', 
-          },
-          body: JSON.stringify(payload)
-        });
-
-        alert("✅ Transaksi Berhasil Disimpan!");
-
-        // Reset Keranjang dan Nota
-        cart = [];
-        currentInvoice = generateInvoiceNumber();
-        document.getElementById('invoiceNum').innerText = currentInvoice;
-        renderCart();
-
-      } catch (error) {
-        console.error("Error:", error);
-        alert("❌ Terjadi kesalahan saat menyimpan transaksi.");
-      } finally {
-        btnSubmit.disabled = false;
-        btnSubmit.innerText = "Bayar & Kirim";
+      if(navigator.onLine) {
+        await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(payload) });
+      } else {
+        let queue = JSON.parse(localStorage.getItem('offlineTx') || "[]");
+        queue.push(payload);
+        localStorage.setItem('offlineTx', JSON.stringify(queue));
+        alert("OFFLINE: Data disimpan sementara di browser.");
       }
+
+      printReceipt(payload);
+      cart = [];
+      renderCart();
+      initApp();
     }
 
-    // Render awal
-    renderCart();
+    function printReceipt(tx) {
+      document.getElementById('rcpBranch').innerText = `Cabang: ${tx.branch_id}`;
+      const itemsContainer = document.getElementById('rcpItems');
+      itemsContainer.innerHTML = '';
+      tx.items.forEach(i => {
+        itemsContainer.innerHTML += `<div style="display:flex;justify-content:space-between;"><span>${i.name} x${i.quantity}</span><span>${i.subtotal}</span></div>`;
+      });
+      document.getElementById('rcpTotal').innerText = `TOTAL: Rp ${tx.total_amount}`;
+      
+      const receipt = document.getElementById('thermalReceipt');
+      receipt.classList.remove('hidden');
+      window.print();
+      receipt.classList.add('hidden');
+    }
+
+    function logout() { localStorage.removeItem('activeUser'); location.reload(); }
+
+    // AUTO SYNC OFFLINE DATA
+    window.addEventListener('online', async () => {
+      let queue = JSON.parse(localStorage.getItem('offlineTx') || "[]");
+      if(queue.length > 0) {
+        for(let tx of queue) {
+          await fetch(API_URL, { method: 'POST', headers: {'Content-Type':'text/plain;charset=utf-8'}, body: JSON.stringify(tx) });
+        }
+        localStorage.removeItem('offlineTx');
+        alert("✅ Offline Data Synced!");
+      }
+    });
   </script>
 </body>
 </html>
