@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4f46e5" />
+      <stop offset="50%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+    <linearGradient id="paperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#f8fafc" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="125%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <!-- Background Rounded Rect -->
+  <rect width="512" height="512" rx="112" fill="url(#bgGrad)"/>
+  
+  <!-- Document Body -->
+  <g filter="url(#shadow)">
+    <path d="M140 100 C140 88.95 148.95 80 160 80 L310 80 L380 150 L380 400 C380 411.05 371.05 420 360 420 L160 420 C148.95 420 140 411.05 140 400 Z" fill="url(#paperGrad)"/>
+    <!-- Folded Corner -->
+    <path d="M310 80 L310 140 C310 145.5 314.5 150 320 150 L380 150 Z" fill="#e2e8f0"/>
+    
+    <!-- Invoice Content Lines -->
+    <rect x="180" y="170" width="80" height="14" rx="7" fill="#4f46e5"/>
+    <rect x="180" y="210" width="160" height="10" rx="5" fill="#94a3b8"/>
+    <rect x="180" y="235" width="120" height="10" rx="5" fill="#cbd5e1"/>
+    
+    <!-- Invoice Items Table representation -->
+    <line x1="180" y1="265" x2="340" y2="265" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="180" y="280" width="90" height="8" rx="4" fill="#64748b"/>
+    <rect x="290" y="280" width="50" height="8" rx="4" fill="#64748b"/>
+    <rect x="180" y="302" width="70" height="8" rx="4" fill="#94a3b8"/>
+    <rect x="290" y="302" width="50" height="8" rx="4" fill="#94a3b8"/>
+    <line x1="180" y1="325" x2="340" y2="325" stroke="#e2e8f0" stroke-width="2"/>
+    
+    <!-- Total Badge -->
+    <rect x="240" y="345" width="100" height="24" rx="8" fill="#10b981"/>
+    <text x="290" y="362" font-family="system-ui, sans-serif" font-size="14" font-weight="bold" fill="#ffffff" text-anchor="middle">PAID</text>
+  </g>
+</svg>

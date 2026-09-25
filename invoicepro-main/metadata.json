@@ -1,0 +1,6 @@
+{
+  "name": "InvoicePro PWA - Smart Invoice & Billing Manager",
+  "description": "Aplikasi PWA pembuatan invoice kustom dengan sinkronisasi cloud, ekspor PDF, dashboard keuangan otomatis, dan pengingat jatuh tempo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
