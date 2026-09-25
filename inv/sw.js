@@ -1,0 +1,42 @@
+{
+  "name": "InvoicePro - PWA Invoice & Billing Manager",
+  "short_name": "InvoicePro",
+  "description": "Aplikasi PWA pembuatan invoice kustom dengan sinkronisasi cloud, ekspor PDF, dashboard keuangan otomatis, dan pengingat jatuh tempo.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon-192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "finance", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Buat Invoice Baru",
+      "short_name": "Invoice Baru",
+      "description": "Buat invoice kustom baru langsung",
+      "url": "/?action=new-invoice",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    },
+    {
+      "name": "Dashboard Keuangan",
+      "short_name": "Dashboard",
+      "description": "Lihat ringkasan omset dan grafik pendapatan bulanan",
+      "url": "/?action=dashboard",
+      "icons": [{ "src": "/icon-192.svg", "sizes": "192x192" }]
+    }
+  ]
+}

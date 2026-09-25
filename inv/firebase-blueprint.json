@@ -1,0 +1,45 @@
+{
+  "entities": {
+    "invoices": {
+      "title": "Invoice",
+      "description": "Invoice documents created by user",
+      "type": "object",
+      "properties": {
+        "invoiceNumber": { "type": "string" },
+        "status": { "type": "string", "enum": ["draft", "pending", "paid", "overdue", "cancelled"] },
+        "issueDate": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "clientName": { "type": "string" },
+        "clientEmail": { "type": "string" },
+        "totalAmount": { "type": "number" },
+        "currency": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["invoiceNumber", "status", "issueDate", "dueDate", "totalAmount"]
+    },
+    "clients": {
+      "title": "Client",
+      "description": "Client directory details",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "company": { "type": "string" },
+        "address": { "type": "string" }
+      },
+      "required": ["name"]
+    },
+    "workspaces": {
+      "title": "Workspace Settings",
+      "description": "User company profile and billing settings",
+      "type": "object",
+      "properties": {
+        "companyName": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "bankDetails": { "type": "string" }
+      }
+    }
+  }
+}
